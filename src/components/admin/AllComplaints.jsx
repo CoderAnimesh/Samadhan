@@ -60,7 +60,7 @@ function ComplaintModal({ complaint, workers, onClose, onUpdate }) {
   const sc = STATUS_COLORS[complaint.status] || '#6366f1';
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" style={{ marginTop: '70px' }} onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.92, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -69,19 +69,19 @@ function ComplaintModal({ complaint, workers, onClose, onUpdate }) {
         style={{ maxWidth: 680, width: '90%', maxHeight: '85vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="modal-header">
-          <div>
-            <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.15rem' }}>{complaint.category}</h2>
+        <div className="modal-header" style={{ gap: 16, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.15rem', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{complaint.category}</h2>
             <span style={{ background: `${sc}20`, color: sc, border: `1px solid ${sc}40`, padding: '2px 10px', borderRadius: 999, fontSize: '0.72rem', fontWeight: 700, marginTop: 4, display: 'inline-block' }}>
               {complaint.status?.toUpperCase()}
             </span>
           </div>
-          <button onClick={onClose} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#94a3b8' }}>
+          <button onClick={onClose} style={{ flexShrink: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#94a3b8' }}>
             <X size={16} />
           </button>
         </div>
 
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="modal-body" style={{ display: 'flex', marginTop: '70px', flexDirection: 'column', gap: 16 }}>
           {/* Info Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
             {[
@@ -186,7 +186,7 @@ function ComplaintModal({ complaint, workers, onClose, onUpdate }) {
                 <button onClick={handleResolve} disabled={actionLoading} className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', width: '100%' }}>
                   {actionLoading ? 'Resolving…' : '✅ Approve & Mark as Resolved'}
                 </button>
-                
+
                 <div style={{ position: 'relative', marginTop: 10, marginBottom: 10 }}>
                   <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, borderTop: '1px solid var(--border)' }} />
                   <div style={{ position: 'relative', background: 'var(--bg-card)', padding: '0 10px', width: 'fit-content', margin: '0 auto', fontSize: '0.75rem', color: '#64748b' }}>OR REJECT</div>
