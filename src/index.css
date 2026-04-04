@@ -47,6 +47,27 @@
   --transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ─── Light Mode Variables ───────────────────────────────────────────────────── */
+body.light-mode {
+  --bg-primary: #f8faff;
+  --bg-secondary: #eef2ff;
+  --bg-card: rgba(99, 102, 241, 0.04);
+  --bg-card-hover: rgba(99, 102, 241, 0.08);
+  --bg-input: rgba(0, 0, 0, 0.04);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(99, 102, 241, 0.5);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.12);
+  scrollbar-color: var(--primary) #e2e8f0;
+}
+
+body.light-mode ::-webkit-scrollbar-track { background: #e2e8f0; }
+
 /* ─── Reset & Base ──────────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -632,4 +653,18 @@ img { max-width: 100%; }
   }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .dashboard-content { padding: 12px; }
+}
+
+/* ─── Theme Transition ────────────────────────────────────────────────────────── */
+body, body * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+/* Exclude animation-heavy elements from transition */
+body canvas, body video, body img {
+  transition: none;
 }

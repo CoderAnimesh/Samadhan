@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import {
+  Shield, Mail, Lock, Eye, EyeOff, AlertCircle,
+  Sun, Moon, ArrowLeft, Sparkles, Users, Wrench,
+} from 'lucide-react';
 import { signInWithEmailAndPassword, signInWithPopup, auth, googleProvider } from '../firebase';
 import toast from 'react-hot-toast';
+
+/* ─── Helpers ────────────────────────────────────────────────────────────────── */
+const isDark = () => !document.body.classList.contains('light-mode');
+
+const useThemeMode = () => {
+  const [dark, setDark] = useState(isDark);
+  useEffect(() => {
+    const obs = new MutationObserver(() => setDark(isDark()));
+    obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, []);
+  return dark;
+};
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24">
@@ -14,8 +30,79 @@ const GoogleIcon = () => (
   </svg>
 );
 
+/* ─── Floating Orb ───────────────────────────────────────────────────────────── */
+const Orb = ({ style, color, dur = 8, delay = 0 }) => (
+  <motion.div
+    animate={{ scale: [1, 1.18, 1], opacity: [0.6, 1, 0.6] }}
+    transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay }}
+    style={{
+      position: 'absolute', borderRadius: '50%', pointerEvents: 'none',
+      background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
+      filter: 'blur(50px)', ...style,
+    }}
+  />
+);
+
+/* ─── Input Field ────────────────────────────────────────────────────────────── */
+const InputField = ({ id, label, type, icon: Icon, placeholder, value, onChange, required, dark, rightSlot, color = '#6366f1' }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+    <label style={{ fontSize: '0.82rem', fontWeight: 600, color: dark ? '#94a3b8' : '#475569', letterSpacing: 0.3 }}>
+      {label}
+    </label>
+    <div style={{ position: 'relative' }}>
+      <Icon size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: dark ? '#4b5563' : '#94a3b8', zIndex: 1 }} />
+      <input
+        id={id}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        required={required}
+        style={{
+          width: '100%',
+          padding: '13px 40px 13px 42px',
+          background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+          border: `1.5px solid ${dark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.10)'}`,
+          borderRadius: 12,
+          color: dark ? '#f1f5f9' : '#0f172a',
+          fontSize: '0.92rem',
+          outline: 'none',
+          transition: 'all 0.2s',
+          fontFamily: 'Inter,sans-serif',
+        }}
+        onFocus={e => { e.target.style.borderColor = color; e.target.style.boxShadow = `0 0 0 3px ${color}22`; }}
+        onBlur={e => { e.target.style.borderColor = dark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.10)'; e.target.style.boxShadow = 'none'; }}
+      />
+      {rightSlot && (
+        <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)' }}>
+          {rightSlot}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+/* ─── Error Banner ───────────────────────────────────────────────────────────── */
+const ErrorBanner = ({ msg }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -8 }}
+    animate={{ opacity: 1, y: 0 }}
+    style={{
+      display: 'flex', gap: 9, alignItems: 'center',
+      padding: '11px 14px',
+      background: 'rgba(239,68,68,0.1)',
+      border: '1px solid rgba(239,68,68,0.3)',
+      borderRadius: 11, fontSize: '0.84rem', color: '#fca5a5',
+    }}
+  >
+    <AlertCircle size={15} style={{ flexShrink: 0 }} /> {msg}
+  </motion.div>
+);
+
+/* ─── Main Component ─────────────────────────────────────────────────────────── */
 export default function LoginPage() {
-  const [tab, setTab] = useState('user'); // 'user' | 'admin' | 'worker'
+  const dark = useThemeMode();
+  const [tab, setTab] = useState('user');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -23,295 +110,305 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const resetForm = (newTab) => { setTab(newTab); setError(''); setEmail(''); setPassword(''); setShowPass(false); };
+
   const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success('Welcome back!');
+      toast.success('Welcome back! 🎉');
       navigate('/dashboard');
-    } catch (err) {
+    } catch {
       setError('Google sign-in failed. Please try again.');
       toast.error('Sign-in failed');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
-  const handleAdminLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  const handleEmailLogin = async (e, role) => {
+    e.preventDefault(); setLoading(true); setError('');
+    const errorMap = {
+      'auth/wrong-password': 'Incorrect password.',
+      'auth/user-not-found': 'No account found with this email.',
+      'auth/invalid-email': 'Invalid email address.',
+      'auth/too-many-requests': 'Too many attempts. Try again later.',
+      'auth/invalid-credential': 'Invalid credentials. Check your email and password.',
+    };
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Welcome, Admin!');
-      navigate('/admin');
+      toast.success(role === 'admin' ? 'Welcome, Admin! 🛡️' : 'Worker login successful! 👷');
+      navigate(role === 'admin' ? '/admin' : '/worker');
     } catch (err) {
-      const messages = {
-        'auth/wrong-password': 'Incorrect password.',
-        'auth/user-not-found': 'No admin account found with this email.',
-        'auth/invalid-email': 'Invalid email address.',
-        'auth/too-many-requests': 'Too many attempts. Please try again later.',
-      };
-      setError(messages[err.code] || 'Login failed. Check your credentials.');
-    } finally {
-      setLoading(false);
-    }
+      setError(errorMap[err.code] || 'Login failed. Check your credentials.');
+    } finally { setLoading(false); }
   };
 
-  const handleWorkerLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast.success('Worker Login Successful!');
-      navigate('/worker');
-    } catch (err) {
-      setError('Login failed. Check your worker credentials.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const tabs = [
+    { id: 'user', label: 'Citizen', icon: Users, color: '#6366f1', accent: 'rgba(99,102,241,0.15)' },
+    { id: 'worker', label: 'Worker', icon: Wrench, color: '#10b981', accent: 'rgba(16,185,129,0.15)' },
+    { id: 'admin', label: 'Admin', icon: Shield, color: '#f59e0b', accent: 'rgba(245,158,11,0.15)' },
+  ];
+  const activeTab = tabs.find(t => t.id === tab);
+  const accentColor = activeTab?.color || '#6366f1';
+
+  const bg = dark
+    ? 'linear-gradient(145deg, #07080f 0%, #0d0f1e 60%, #07080f 100%)'
+    : 'linear-gradient(145deg, #f0f4ff 0%, #e8f0fe 60%, #f0f9ff 100%)';
 
   return (
     <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--bg-primary)',
-      padding: '20px',
-      position: 'relative',
-      overflow: 'hidden',
+      minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: bg, padding: '24px 16px', position: 'relative', overflow: 'hidden',
+      transition: 'background 0.4s',
     }}>
-      {/* BG Orbs */}
-      <div style={{ position: 'absolute', top: '15%', left: '10%', width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '10%', right: '8%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(34,211,238,0.08) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+      {/* Background orbs */}
+      <Orb style={{ top: '8%', left: '5%', width: 500, height: 500 }} color={dark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.07)'} dur={9} />
+      <Orb style={{ bottom: '8%', right: '5%', width: 420, height: 420 }} color={dark ? 'rgba(34,211,238,0.09)' : 'rgba(34,211,238,0.06)'} dur={11} delay={2} />
+      <Orb style={{ top: '50%', left: '50%', width: 300, height: 300, transform: 'translate(-50%,-50%)' }} color={dark ? `${accentColor}14` : `${accentColor}0a`} dur={7} delay={1} />
 
+      {/* Grid bg */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        backgroundImage: `linear-gradient(${dark ? 'rgba(99,102,241,0.03)' : 'rgba(99,102,241,0.05)'} 1px, transparent 1px), linear-gradient(90deg, ${dark ? 'rgba(99,102,241,0.03)' : 'rgba(99,102,241,0.05)'} 1px, transparent 1px)`,
+        backgroundSize: '50px 50px',
+      }} />
+
+      {/* Back button */}
+      <Link to="/" style={{ position: 'fixed', top: 20, left: 20, zIndex: 10 }}>
+        <motion.div
+          whileHover={{ x: -3, scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '9px 16px', borderRadius: 12,
+            background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+            border: `1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
+            color: dark ? '#94a3b8' : '#475569',
+            fontSize: '0.82rem', fontWeight: 600,
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <ArrowLeft size={15} /> Back
+        </motion.div>
+      </Link>
+
+      {/* Card */}
       <motion.div
-        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+        initial={{ opacity: 0, y: 32, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          width: '100%', maxWidth: 460,
-          background: 'rgba(13,15,30,0.9)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          borderRadius: 24, overflow: 'hidden',
-          boxShadow: '0 25px 80px rgba(0,0,0,0.5)',
+          width: '100%', maxWidth: 480, position: 'relative',
+          background: dark ? 'rgba(13,15,30,0.92)' : 'rgba(255,255,255,0.92)',
+          border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+          borderRadius: 28, overflow: 'hidden',
+          boxShadow: dark ? '0 30px 90px rgba(0,0,0,0.55)' : '0 30px 90px rgba(0,0,0,0.12)',
+          backdropFilter: 'blur(24px)',
         }}
       >
-        {/* Header */}
-        <div style={{ padding: '32px 32px 0', textAlign: 'center' }}>
-          <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #6366f1, #22d3ee)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(99,102,241,0.4)' }}>
-              <Shield size={24} color="white" />
-            </div>
-            <span style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.2rem' }}>SAMADHAN</span>
-          </Link>
-          <h1 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.6rem', marginBottom: 8 }}>Welcome Back</h1>
-          <p style={{ color: '#94a3b8', fontSize: '0.88rem' }}>Sign in to your account</p>
-        </div>
+        {/* Top accent line */}
+        <div style={{
+          height: 3,
+          background: `linear-gradient(90deg, ${accentColor}, ${accentColor === '#6366f1' ? '#22d3ee' : accentColor === '#10b981' ? '#34d399' : '#fbbf24'})`,
+          transition: 'background 0.3s',
+        }} />
 
-        {/* Tabs */}
-        <div style={{ display: 'flex', margin: '24px 32px 0', background: 'rgba(255,255,255,0.04)', borderRadius: 12, padding: 4 }}>
-          {[{ id: 'user', label: '👤 Citizen' }, { id: 'worker', label: '👷 Worker' }, { id: 'admin', label: '🛡️ Admin' }].map((t) => (
-            <button
-              key={t.id}
-              onClick={() => { setTab(t.id); setError(''); }}
-              style={{
-                flex: 1, padding: '10px 12px', borderRadius: 9, border: 'none', cursor: 'pointer',
-                fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s',
-                background: tab === t.id ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
-                color: tab === t.id ? 'white' : '#94a3b8',
-                boxShadow: tab === t.id ? '0 4px 15px rgba(99,102,241,0.3)' : 'none',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div style={{ padding: '24px 32px 32px' }}>
-          <AnimatePresence mode="wait">
-            {tab === 'user' ? (
+        <div style={{ padding: '36px 36px 40px' }}>
+          {/* Logo + Title */}
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
+            <Link to="/">
               <motion.div
-                key="user"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.25 }}
+                whileHover={{ scale: 1.05 }}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24 }}
               >
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 20, textAlign: 'center', lineHeight: 1.6 }}>
-                  Citizens and residents use Google to sign in securely and instantly.
-                </p>
-
-                {error && tab === 'user' && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, marginBottom: 16, fontSize: '0.85rem', color: '#fca5a5' }}>
-                    <AlertCircle size={16} /> {error}
-                  </motion.div>
-                )}
-
-                <button onClick={handleGoogleLogin} disabled={loading} className="btn-google" id="user-google-login">
-                  <GoogleIcon />
-                  {loading ? 'Signing in…' : 'Continue with Google'}
-                </button>
-
-                <div style={{ textAlign: 'center', marginTop: 20, fontSize: '0.83rem', color: '#64748b' }}>
-                  Don't have an account?{' '}
-                  <Link to="/register" style={{ color: '#818cf8', fontWeight: 600 }}>Register here</Link>
+                <div style={{
+                  width: 46, height: 46, borderRadius: 14,
+                  background: 'linear-gradient(135deg, #6366f1, #22d3ee)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 0 24px rgba(99,102,241,0.45)',
+                }}>
+                  <Shield size={24} color="white" />
                 </div>
+                <span style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.25rem', color: dark ? '#f1f5f9' : '#0f172a' }}>SAMADHAN</span>
               </motion.div>
-            ) : tab === 'worker' ? (
-              <motion.div
-                key="worker"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-              >
-                <form onSubmit={handleWorkerLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {error && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, fontSize: '0.85rem', color: '#fca5a5' }}>
-                      <AlertCircle size={16} /> {error}
-                    </motion.div>
-                  )}
-                  <p style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: 10, textAlign: 'center' }}>
-                    Login to view and resolve your assigned complaints.
-                  </p>
+            </Link>
+            <h1 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.65rem', color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 6 }}>
+              Welcome Back 👋
+            </h1>
+            <p style={{ color: dark ? '#64748b' : '#94a3b8', fontSize: '0.88rem' }}>
+              Sign in to continue to your account
+            </p>
+          </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Email</label>
-                    <div style={{ position: 'relative' }}>
-                      <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input
-                        id="worker-email"
-                        type="email"
-                        className="form-input"
-                        style={{ paddingLeft: 42 }}
-                        placeholder="worker@samadhan.com"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
+          {/* Role Tabs */}
+          <div style={{
+            display: 'flex', gap: 6, marginBottom: 28,
+            background: dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
+            borderRadius: 14, padding: 5,
+            border: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+          }}>
+            {tabs.map((t) => {
+              const active = tab === t.id;
+              return (
+                <motion.button
+                  key={t.id}
+                  onClick={() => resetForm(t.id)}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    flex: 1, padding: '10px 8px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                    fontWeight: 700, fontSize: '0.8rem', transition: 'all 0.25s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: active ? `linear-gradient(135deg, ${t.color}, ${t.color}cc)` : 'transparent',
+                    color: active ? 'white' : (dark ? '#64748b' : '#94a3b8'),
+                    boxShadow: active ? `0 4px 14px ${t.color}40` : 'none',
+                  }}
+                >
+                  <t.icon size={14} />
+                  {t.label}
+                </motion.button>
+              );
+            })}
+          </div>
+
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              {tab === 'user' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Citizen info box */}
+                  <div style={{
+                    padding: '14px 16px', borderRadius: 14,
+                    background: dark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.07)',
+                    border: `1px solid rgba(99,102,241,0.2)`,
+                    fontSize: '0.84rem', color: dark ? '#a5b4fc' : '#4f46e5',
+                    lineHeight: 1.6, textAlign: 'center',
+                  }}>
+                    <Sparkles size={14} style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-top' }} />
+                    Citizens and residents sign in instantly using Google — no password needed.
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Password</label>
-                    <div style={{ position: 'relative' }}>
-                      <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input
-                        id="worker-password"
-                        type={showPass ? 'text' : 'password'}
-                        className="form-input"
-                        style={{ paddingLeft: 42, paddingRight: 42 }}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
+                  {error && <ErrorBanner msg={error} />}
 
                   <motion.button
-                    id="worker-login-btn"
-                    type="submit"
+                    id="user-google-login"
+                    onClick={handleGoogleLogin}
                     disabled={loading}
-                    whileHover={{ scale: loading ? 1 : 1.02 }}
+                    whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(0,0,0,0.18)' }}
                     whileTap={{ scale: 0.98 }}
                     style={{
-                      padding: '13px', borderRadius: 12,
-                      background: 'linear-gradient(135deg, #10b981, #059669)',
-                      color: 'white', border: 'none', fontWeight: 700, fontSize: '0.95rem',
-                      cursor: loading ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+                      padding: '14px', background: 'white', color: '#1f1f1f',
+                      borderRadius: 14, border: '1.5px solid rgba(0,0,0,0.08)',
+                      fontWeight: 700, fontSize: '0.94rem', cursor: loading ? 'not-allowed' : 'pointer',
                       opacity: loading ? 0.7 : 1,
-                      marginTop: 4,
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
                     }}
                   >
-                    {loading ? 'Signing in...' : 'Sign In as Worker'}
+                    <GoogleIcon /> {loading ? 'Signing in…' : 'Continue with Google'}
                   </motion.button>
-                </form>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="admin"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-              >
-                <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  {error && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '10px 14px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, fontSize: '0.85rem', color: '#fca5a5' }}>
-                      <AlertCircle size={16} /> {error}
-                    </motion.div>
-                  )}
 
-                  <div className="form-group">
-                    <label className="form-label">Admin Email</label>
-                    <div style={{ position: 'relative' }}>
-                      <Mail size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input
-                        id="admin-email"
-                        type="email"
-                        className="form-input"
-                        style={{ paddingLeft: 42 }}
-                        placeholder="admin@samadhan.gov.in"
-                        value={email}
-                        onChange={e => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
+                  <div style={{ textAlign: 'center', fontSize: '0.83rem', color: dark ? '#475569' : '#94a3b8', marginTop: 4 }}>
+                    Don't have an account?{' '}
+                    <Link to="/register" style={{ color: '#818cf8', fontWeight: 700 }}>Register here</Link>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={(e) => handleEmailLogin(e, tab)} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{
+                    padding: '12px 16px', borderRadius: 12,
+                    background: dark ? `${accentColor}12` : `${accentColor}0a`,
+                    border: `1px solid ${accentColor}30`,
+                    fontSize: '0.82rem', color: dark ? '#cbd5e1' : '#475569',
+                    textAlign: 'center',
+                  }}>
+                    {tab === 'admin'
+                      ? '🛡️ Admin portal — for administrative staff only.'
+                      : '👷 Worker portal — view and resolve your assigned complaints.'}
                   </div>
 
-                  <div className="form-group">
-                    <label className="form-label">Password</label>
-                    <div style={{ position: 'relative' }}>
-                      <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#64748b' }} />
-                      <input
-                        id="admin-password"
-                        type={showPass ? 'text' : 'password'}
-                        className="form-input"
-                        style={{ paddingLeft: 42, paddingRight: 42 }}
-                        placeholder="Enter your password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                      />
+                  {error && <ErrorBanner msg={error} />}
+
+                  <InputField
+                    id={`${tab}-email`}
+                    label="Email Address"
+                    type="email"
+                    icon={Mail}
+                    placeholder={tab === 'admin' ? 'admin@samadhan.gov.in' : 'worker@samadhan.com'}
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    required
+                    dark={dark}
+                    color={accentColor}
+                  />
+
+                  <InputField
+                    id={`${tab}-password`}
+                    label="Password"
+                    type={showPass ? 'text' : 'password'}
+                    icon={Lock}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    dark={dark}
+                    color={accentColor}
+                    rightSlot={
                       <button
                         type="button"
-                        onClick={() => setShowPass(!showPass)}
-                        style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}
+                        onClick={() => setShowPass(p => !p)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: dark ? '#64748b' : '#94a3b8', display: 'flex', padding: 2 }}
                       >
                         {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
-                    </div>
-                  </div>
+                    }
+                  />
 
                   <motion.button
-                    id="admin-login-btn"
+                    id={`${tab}-login-btn`}
                     type="submit"
                     disabled={loading}
                     whileHover={{ scale: loading ? 1 : 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     style={{
-                      padding: '13px', borderRadius: 12,
-                      background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                      color: 'white', border: 'none', fontWeight: 700, fontSize: '0.95rem',
-                      cursor: loading ? 'not-allowed' : 'pointer',
-                      opacity: loading ? 0.7 : 1,
+                      padding: '14px', borderRadius: 14, border: 'none',
+                      background: `linear-gradient(135deg, ${accentColor}, ${accentColor}cc)`,
+                      color: 'white', fontWeight: 700, fontSize: '0.95rem',
+                      cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1,
+                      boxShadow: `0 6px 24px ${accentColor}35`,
                       marginTop: 4,
                     }}
                   >
-                    {loading ? 'Signing in...' : 'Sign In as Admin'}
+                    {loading ? 'Signing in…' : `Sign In as ${tab === 'admin' ? 'Admin' : 'Worker'}`}
                   </motion.button>
                 </form>
-              </motion.div>
-            )}
+              )}
+            </motion.div>
           </AnimatePresence>
         </div>
+
+        {/* Footer strip */}
+        <div style={{
+          padding: '14px 36px',
+          borderTop: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+          background: dark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+          textAlign: 'center',
+          fontSize: '0.75rem',
+          color: dark ? '#334155' : '#94a3b8',
+        }}>
+          🔒 Secured by Google OAuth · SAMADHAN © 2026
+        </div>
       </motion.div>
+
+      <style>{`
+        @media (max-width: 520px) {
+          .login-card-inner { padding: 24px 20px 28px !important; }
+        }
+      `}</style>
     </div>
   );
 }
