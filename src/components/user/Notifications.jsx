@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCheck, AlertCircle } from 'lucide-react';
+import { Bell, CheckCheck } from 'lucide-react';
 import api from '../../api';
+import { useTranslation } from 'react-i18next';
 
 export default function Notifications({ onUnreadChange }) {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,18 +52,18 @@ export default function Notifications({ onUnreadChange }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
           <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Bell size={22} color="#6366f1" /> Notifications
+            <Bell size={22} color="#6366f1" /> {t('nav.notifications', 'Notifications')}
             {unread > 0 && (
               <span style={{ background: '#6366f1', color: 'white', fontSize: '0.72rem', fontWeight: 700, padding: '2px 9px', borderRadius: 999 }}>
-                {unread} new
+                {unread} {t('dashboard.new', 'new')}
               </span>
             )}
           </h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 2 }}>{notifications.length} total notifications</p>
+          <p style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 2 }}>{notifications.length} {t('dashboard.totalNotifs', 'total notifications')}</p>
         </div>
         {unread > 0 && (
           <button onClick={markAllRead} className="btn btn-outline btn-sm" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <CheckCheck size={14} /> Mark all read
+            <CheckCheck size={14} /> {t('nav.markAllRead', 'Mark all read')}
           </button>
         )}
       </div>
@@ -69,8 +71,8 @@ export default function Notifications({ onUnreadChange }) {
       {notifications.length === 0 ? (
         <div className="empty-state">
           <Bell size={48} />
-          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>No Notifications</h3>
-          <p style={{ fontSize: '0.85rem' }}>You'll be notified when your complaint status changes.</p>
+          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>{t('dashboard.noNotifs', 'No Notifications')}</h3>
+          <p style={{ fontSize: '0.85rem' }}>{t('dashboard.noNotifsSub', 'You\'ll be notified when your complaint status changes.')}</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -101,7 +103,7 @@ export default function Notifications({ onUnreadChange }) {
                       {notif.message}
                     </p>
                     <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: 5 }}>
-                      {new Date(notif.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(notif.createdAt).toLocaleString(t('app.locale', 'en-IN'), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </p>
                   </div>
                 </div>

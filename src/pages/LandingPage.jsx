@@ -5,6 +5,8 @@ import {
   Shield, MapPin, Users, Bell, CheckCircle, ArrowRight, Zap, Eye, Clock,
   Sun, Moon, Menu, X, Star, TrendingUp, Award, Cpu
 } from 'lucide-react';
+import LanguageSwitcher from '../components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 /* ─── Theme Context ──────────────────────────────────────────────────────────── */
 const useTheme = () => {
@@ -80,8 +82,8 @@ const Counter = ({ target, suffix = '' }) => {
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-/* ─── Navbar ─────────────────────────────────────────────────────────────────── */
 const Navbar = ({ dark, toggleTheme }) => {
+  const { t } = useTranslation();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -91,7 +93,12 @@ const Navbar = ({ dark, toggleTheme }) => {
     return () => window.removeEventListener('scroll', handler);
   }, []);
 
-  const navLinks = ['Home', 'Features', 'How it Works', 'Contact'];
+  const navLinks = [
+    { key: 'home', label: t('nav.home', 'Home') },
+    { key: 'features', label: t('nav.features', 'Features') },
+    { key: 'how-it-works', label: t('nav.howItWorks', 'How it Works') },
+    { key: 'contact', label: t('nav.contact', 'Contact') }
+  ];
 
   const navBg = dark
     ? scrolled ? 'rgba(7,8,15,0.95)' : 'transparent'
@@ -126,26 +133,28 @@ const Navbar = ({ dark, toggleTheme }) => {
           </div>
           <div>
             <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.5px', color: dark ? '#f1f5f9' : '#0f172a' }}>
-              SĀMĀDHĀN
+              {t('app.title', 'SĀMĀDHĀN')}
             </div>
             <div style={{ fontSize: '0.58rem', color: dark ? 'rgba(148,163,184,0.8)' : 'rgba(71,85,105,0.8)', letterSpacing: 1.5, textTransform: 'uppercase' }}>
-              Smart Admin System
+              {t('app.subtitle', 'Smart Admin System')}
             </div>
           </div>
         </motion.div>
 
         {/* Desktop Nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="desktop-nav">
-          {navLinks.map((item) => (
+          {navLinks.map((link) => (
             <motion.a
-              key={item}
-              href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+              key={link.key}
+              href={`#${link.key}`}
               whileHover={{ color: '#6366f1' }}
               style={{ padding: '8px 14px', fontSize: '0.88rem', color: dark ? 'rgba(241,245,249,0.75)' : 'rgba(15,23,42,0.7)', fontWeight: 500, transition: 'color 0.2s', borderRadius: 8 }}
             >
-              {item}
+              {link.label}
             </motion.a>
           ))}
+
+          <LanguageSwitcher />
 
           {/* Theme Toggle */}
           <motion.button
@@ -180,13 +189,14 @@ const Navbar = ({ dark, toggleTheme }) => {
                 boxShadow: '0 4px 16px rgba(99,102,241,0.3)',
               }}
             >
-              Login
+              {t('nav.login', 'Login')}
             </motion.button>
           </Link>
         </div>
 
         {/* Mobile Hamburger */}
         <div style={{ display: 'none' }} className="mobile-menu-btn">
+          <LanguageSwitcher />
           <motion.button
             onClick={() => setMenuOpen(o => !o)}
             whileTap={{ scale: 0.9 }}
@@ -219,20 +229,20 @@ const Navbar = ({ dark, toggleTheme }) => {
               boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
             }}
           >
-            {navLinks.map(item => (
+            {navLinks.map(link => (
               <a
-                key={item}
-                href={`#${item.toLowerCase().replace(/ /g, '-')}`}
+                key={link.key}
+                href={`#${link.key}`}
                 onClick={() => setMenuOpen(false)}
                 style={{ display: 'block', padding: '12px 24px', fontSize: '0.95rem', color: dark ? '#e2e8f0' : '#1e293b', fontWeight: 500 }}
               >
-                {item}
+                {link.label}
               </a>
             ))}
             <div style={{ padding: '12px 24px', borderTop: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`, marginTop: 8 }}>
               <Link to="/login" onClick={() => setMenuOpen(false)}>
                 <button style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg,#6366f1,#4f46e5)', color: 'white', border: 'none', borderRadius: 10, fontWeight: 600, cursor: 'pointer' }}>
-                  Login
+                  {t('nav.login', 'Login')}
                 </button>
               </Link>
             </div>
@@ -252,10 +262,11 @@ const Navbar = ({ dark, toggleTheme }) => {
 
 /* ─── Hero Section ───────────────────────────────────────────────────────────── */
 const HeroSection = ({ dark }) => {
+  const { t } = useTranslation();
   const features = [
-    { icon: MapPin, label: 'Live Location Tracking', color: '#6366f1' },
-    { icon: Zap, label: 'Instant Assignments', color: '#f59e0b' },
-    { icon: Bell, label: 'Real-time Alerts', color: '#10b981' },
+    { icon: MapPin, label: t('landing.feat1', 'Live Location Tracking'), color: '#6366f1' },
+    { icon: Zap, label: t('landing.feat2', 'Instant Assignments'), color: '#f59e0b' },
+    { icon: Bell, label: t('landing.feat3', 'Real-time Alerts'), color: '#10b981' },
   ];
 
   const orbs = [
@@ -303,7 +314,7 @@ const HeroSection = ({ dark }) => {
           style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 18px', borderRadius: 999, background: dark ? 'rgba(99,102,241,0.12)' : 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.35)', fontSize: '0.8rem', color: '#818cf8', fontWeight: 600, marginBottom: 28, letterSpacing: 0.5 }}
         >
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'linear-gradient(135deg,#6366f1,#22d3ee)', display: 'inline-block', animation: 'lpulse 2s infinite' }} />
-          Smart Administration & Monitoring System
+          {t('app.subtitle', 'Smart Administration & Monitoring System')}
         </motion.div>
 
         {/* Heading */}
@@ -312,17 +323,8 @@ const HeroSection = ({ dark }) => {
           transition={{ delay: 0.35, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           style={{ fontFamily: 'Outfit,sans-serif', fontSize: 'clamp(2.8rem, 7vw, 5.8rem)', fontWeight: 900, lineHeight: 1.05, marginBottom: 26, color: dark ? '#f1f5f9' : '#0f172a' }}
         >
-          Resolve{' '}
           <span style={{ background: 'linear-gradient(135deg, #6366f1, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', position: 'relative' }}>
-            City Problems
-          </span>
-          <br />
-          <span style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            Smarter
-          </span>{' '}
-          &{' '}
-          <span style={{ background: 'linear-gradient(135deg, #10b981, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            Faster
+            {t('landing.heroTitle', 'Empowering Citizens, Enabling Solutions')}
           </span>
         </motion.h1>
 
@@ -331,7 +333,7 @@ const HeroSection = ({ dark }) => {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           style={{ fontSize: 'clamp(1rem, 2.2vw, 1.2rem)', color: dark ? '#94a3b8' : '#475569', maxWidth: 640, margin: '0 auto 44px', lineHeight: 1.75 }}
         >
-          SAMADHAN bridges the gap between citizens and administration. Raise complaints with your live location, track resolution in real-time, and get notified the moment your issue is resolved.
+          {t('landing.heroSub')}
         </motion.p>
 
         {/* CTA Buttons */}
@@ -351,7 +353,7 @@ const HeroSection = ({ dark }) => {
                 boxShadow: '0 6px 24px rgba(99,102,241,0.35)',
               }}
             >
-              Get Started Free <ArrowRight size={18} />
+              {t('landing.getStarted', 'Get Started Free')} <ArrowRight size={18} />
             </motion.button>
           </Link>
           <Link to="/login">
@@ -365,7 +367,7 @@ const HeroSection = ({ dark }) => {
                 fontSize: '1rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
               }}
             >
-              Sign In
+              {t('nav.login', 'Sign In')}
             </motion.button>
           </Link>
         </motion.div>
@@ -404,13 +406,14 @@ const HeroSection = ({ dark }) => {
 
 /* ─── Features Section ───────────────────────────────────────────────────────── */
 const FeaturesSection = ({ dark }) => {
+  const { t } = useTranslation();
   const cards = [
-    { icon: MapPin, title: 'Location-Based Complaints', desc: 'Auto-detect your exact location using GPS and raise a complaint with a single click. Google Maps integration for precision.', color: '#6366f1', gradient: 'linear-gradient(135deg,#6366f115,#818cf808)' },
-    { icon: Eye, title: 'Live Status Tracking', desc: 'Track your complaint through every phase: Submitted→Assigned→Reverification→Resolved. Real-time updates.', color: '#22d3ee', gradient: 'linear-gradient(135deg,#22d3ee15,#0891b208)' },
-    { icon: Users, title: 'Worker Assignment', desc: 'Admins intelligently assign trained workers to each complaint based on category and area for fastest resolution.', color: '#f59e0b', gradient: 'linear-gradient(135deg,#f59e0b15,#fbbf2408)' },
-    { icon: Bell, title: 'Instant Notifications', desc: 'Get notified at every stage — worker assigned, review begins, and when the issue is finally resolved.', color: '#10b981', gradient: 'linear-gradient(135deg,#10b98115,#34d39908)' },
-    { icon: Shield, title: 'Secure & Verified', desc: 'All users authenticated via Google. Admins go through a separate secure login. Data encrypted end-to-end.', color: '#f97316', gradient: 'linear-gradient(135deg,#f9731615,#fb923c08)' },
-    { icon: Clock, title: 'Fast Resolution', desc: 'Our streamlined workflow ensures complaints don\'t sit idle. SLA tracking keeps admins accountable.', color: '#a855f7', gradient: 'linear-gradient(135deg,#a855f715,#c084fc08)' },
+    { icon: MapPin, title: t('landing.feat1Title', 'Location-Based Complaints'), desc: t('landing.feat1Desc', 'Auto-detect your exact location using GPS and raise a complaint with a single click.'), color: '#6366f1', gradient: 'linear-gradient(135deg,#6366f115,#818cf808)' },
+    { icon: Eye, title: t('landing.feat2Title', 'Live Status Tracking'), desc: t('landing.feat2Desc', 'Track your complaint through every phase: Submitted→Assigned→Reverification→Resolved.'), color: '#22d3ee', gradient: 'linear-gradient(135deg,#22d3ee15,#0891b208)' },
+    { icon: Users, title: t('landing.feat3Title', 'Worker Assignment'), desc: t('landing.feat3Desc', 'Admins intelligently assign trained workers to each complaint based on category and area.'), color: '#f59e0b', gradient: 'linear-gradient(135deg,#f59e0b15,#fbbf2408)' },
+    { icon: Bell, title: t('landing.feat4Title', 'Instant Notifications'), desc: t('landing.feat4Desc', 'Get notified at every stage — worker assigned, review begins, and when the issue is resolved.'), color: '#10b981', gradient: 'linear-gradient(135deg,#10b98115,#34d39908)' },
+    { icon: Shield, title: t('landing.feat5Title', 'Secure & Verified'), desc: t('landing.feat5Desc', 'All users authenticated via Google. Data encrypted end-to-end.'), color: '#f97316', gradient: 'linear-gradient(135deg,#f9731615,#fb923c08)' },
+    { icon: Clock, title: t('landing.feat6Title', 'Fast Resolution'), desc: t('landing.feat6Desc', 'Our streamlined workflow ensures complaints don\'t sit idle.'), color: '#a855f7', gradient: 'linear-gradient(135deg,#a855f715,#c084fc08)' },
   ];
 
   return (
@@ -420,13 +423,13 @@ const FeaturesSection = ({ dark }) => {
         style={{ textAlign: 'center', marginBottom: 72 }}
       >
         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 999, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', fontSize: '0.78rem', color: '#818cf8', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-          <Cpu size={13} /> Features
+          <Cpu size={13} /> {t('landing.featuresTag', 'Features')}
         </div>
         <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 'clamp(2rem, 4.5vw, 3.2rem)', fontWeight: 800, marginBottom: 18, color: dark ? '#f1f5f9' : '#0f172a' }}>
-          Everything You Need
+          {t('landing.featuresTitle', 'Everything You Need')}
         </h2>
         <p style={{ color: dark ? '#94a3b8' : '#475569', maxWidth: 520, margin: '0 auto', lineHeight: 1.75, fontSize: '1rem' }}>
-          A complete ecosystem for citizen complaint management, built for speed, transparency and accountability.
+          {t('landing.featuresSub', 'A complete ecosystem for citizen complaint management, built for speed, transparency and accountability.')}
         </p>
       </motion.div>
 
@@ -472,13 +475,14 @@ const FeaturesSection = ({ dark }) => {
 
 /* ─── How It Works ───────────────────────────────────────────────────────────── */
 const HowItWorksSection = ({ dark }) => {
+  const { t } = useTranslation();
   const steps = [
-    { num: '01', title: 'Register with Google', desc: 'Sign up instantly using your Google account. No lengthy forms required.', color: '#6366f1', bg: 'linear-gradient(135deg,#6366f130,#6366f110)' },
-    { num: '02', title: 'Raise a Complaint', desc: 'Your location is auto-detected. Describe the problem and submit in seconds.', color: '#22d3ee', bg: 'linear-gradient(135deg,#22d3ee30,#22d3ee10)' },
-    { num: '03', title: 'Admin Reviews & Assigns', desc: 'An admin reviews your complaint and assigns a qualified worker.', color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b30,#f59e0b10)' },
-    { num: '04', title: 'Worker Resolves it', desc: 'The assigned worker visits the site and fixes the issue on-ground.', color: '#10b981', bg: 'linear-gradient(135deg,#10b98130,#10b98110)' },
-    { num: '05', title: 'Admin Re-verifies', desc: 'Admin conducts a final verification to ensure quality resolution.', color: '#f97316', bg: 'linear-gradient(135deg,#f9731630,#f9731610)' },
-    { num: '06', title: 'You Get Notified', desc: 'A notification confirms your complaint is officially resolved!', color: '#a855f7', bg: 'linear-gradient(135deg,#a855f730,#a855f710)' },
+    { num: '01', title: t('landing.step1Title', 'Register with Google'), desc: t('landing.step1Desc', 'Sign up instantly using your Google account.'), color: '#6366f1', bg: 'linear-gradient(135deg,#6366f130,#6366f110)' },
+    { num: '02', title: t('landing.step2Title', 'Raise a Complaint'), desc: t('landing.step2Desc', 'Location auto-detected. Describe and submit in seconds.'), color: '#22d3ee', bg: 'linear-gradient(135deg,#22d3ee30,#22d3ee10)' },
+    { num: '03', title: t('landing.step3Title', 'Admin Reviews & Assigns'), desc: t('landing.step3Desc', 'Admin reviews and assigns a qualified worker.'), color: '#f59e0b', bg: 'linear-gradient(135deg,#f59e0b30,#f59e0b10)' },
+    { num: '04', title: t('landing.step4Title', 'Worker Resolves it'), desc: t('landing.step4Desc', 'Assigned worker visits site and fixes the issue.'), color: '#10b981', bg: 'linear-gradient(135deg,#10b98130,#10b98110)' },
+    { num: '05', title: t('landing.step5Title', 'Admin Re-verifies'), desc: t('landing.step5Desc', 'Admin verifies resolution before final approval.'), color: '#f97316', bg: 'linear-gradient(135deg,#f9731630,#f9731610)' },
+    { num: '06', title: t('landing.step6Title', 'You Get Notified'), desc: t('landing.step6Desc', 'A notification confirms your issue is resolved!'), color: '#a855f7', bg: 'linear-gradient(135deg,#a855f730,#a855f710)' },
   ];
 
   return (
@@ -492,13 +496,13 @@ const HowItWorksSection = ({ dark }) => {
           style={{ textAlign: 'center', marginBottom: 72 }}
         >
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 999, background: 'rgba(34,211,238,0.1)', border: '1px solid rgba(34,211,238,0.25)', fontSize: '0.78rem', color: '#22d3ee', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-            <TrendingUp size={13} /> Process
+            <TrendingUp size={13} /> {t('landing.processTag', 'Process')}
           </div>
           <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 'clamp(2rem, 4.5vw, 3.2rem)', fontWeight: 800, marginBottom: 18, color: dark ? '#f1f5f9' : '#0f172a' }}>
-            How It Works
+            {t('landing.howItWorksTitle', 'How It Works')}
           </h2>
           <p style={{ color: dark ? '#94a3b8' : '#475569', maxWidth: 520, margin: '0 auto', lineHeight: 1.75 }}>
-            Six simple steps from complaint submission to full resolution.
+            {t('landing.howItWorksSub', 'Six simple steps from complaint submission to full resolution.')}
           </p>
         </motion.div>
 
@@ -546,11 +550,12 @@ const HowItWorksSection = ({ dark }) => {
 
 /* ─── Stats Section ──────────────────────────────────────────────────────────── */
 const StatsSection = ({ dark }) => {
+  const { t } = useTranslation();
   const stats = [
-    { value: '10000', suffix: '+', label: 'Complaints Resolved', icon: CheckCircle, color: '#6366f1' },
-    { value: '98', suffix: '%', label: 'Satisfaction Rate', icon: Star, color: '#f59e0b' },
-    { value: '48', suffix: 'h', label: 'Avg. Resolution Time', icon: Clock, color: '#22d3ee' },
-    { value: '50', suffix: '+', label: 'Active Workers', icon: Users, color: '#10b981' },
+    { value: '10000', suffix: '+', label: t('landing.stats1', 'Complaints Resolved'), icon: CheckCircle, color: '#6366f1' },
+    { value: '98', suffix: '%', label: t('landing.stats2', 'Satisfaction Rate'), icon: Star, color: '#f59e0b' },
+    { value: '48', suffix: 'h', label: t('landing.stats3', 'Avg. Resolution Time'), icon: Clock, color: '#22d3ee' },
+    { value: '50', suffix: '+', label: t('landing.stats4', 'Active Workers'), icon: Users, color: '#10b981' },
   ];
   return (
     <section style={{ padding: '90px 24px' }}>
@@ -560,10 +565,10 @@ const StatsSection = ({ dark }) => {
           style={{ textAlign: 'center', marginBottom: 60 }}
         >
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 999, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '0.78rem', color: '#f59e0b', fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16 }}>
-            <Award size={13} /> Our Impact
+            <Award size={13} /> {t('landing.impactTag', 'Our Impact')}
           </div>
           <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 'clamp(1.8rem, 4vw, 3rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a' }}>
-            Numbers That Matter
+            {t('landing.statsTitle', 'Numbers That Matter')}
           </h2>
         </motion.div>
 
@@ -602,84 +607,96 @@ const StatsSection = ({ dark }) => {
 };
 
 /* ─── CTA Banner ─────────────────────────────────────────────────────────────── */
-const CTASection = ({ dark }) => (
-  <section style={{ padding: '80px 24px' }}>
-    <motion.div
-      initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-      style={{
-        maxWidth: 900, margin: '0 auto', padding: '60px 40px', borderRadius: 28, textAlign: 'center',
-        background: 'linear-gradient(135deg, #6366f1, #4f46e5 40%, #22d3ee)',
-        position: 'relative', overflow: 'hidden',
-        boxShadow: '0 20px 80px rgba(99,102,241,0.35)',
-      }}
-    >
-      <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
-      <div style={{ position: 'absolute', bottom: -40, left: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
-      <div style={{ position: 'relative' }}>
-        <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: 'white', marginBottom: 16 }}>
-          Ready to Make Your City Better?
-        </h2>
-        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.05rem', lineHeight: 1.7, marginBottom: 36, maxWidth: 560, margin: '0 auto 36px' }}>
-          Join thousands of citizens who are actively shaping a smarter, cleaner, more responsive city.
-        </p>
-        <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link to="/register">
-            <motion.button
-              whileHover={{ scale: 1.06, boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
-              whileTap={{ scale: 0.97 }}
-              style={{ padding: '14px 34px', borderRadius: 14, background: 'white', color: '#4f46e5', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
-            >
-              Get Started Free <ArrowRight size={18} />
-            </motion.button>
-          </Link>
-          <Link to="/login">
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              style={{ padding: '14px 34px', borderRadius: 14, background: 'transparent', color: 'white', border: '1.5px solid rgba(255,255,255,0.5)', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
-            >
-              Sign In
-            </motion.button>
-          </Link>
+const CTASection = ({ dark }) => {
+  const { t } = useTranslation();
+  return (
+    <section style={{ padding: '80px 24px' }}>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+        style={{
+          maxWidth: 900, margin: '0 auto', padding: '60px 40px', borderRadius: 28, textAlign: 'center',
+          background: 'linear-gradient(135deg, #6366f1, #4f46e5 40%, #22d3ee)',
+          position: 'relative', overflow: 'hidden',
+          boxShadow: '0 20px 80px rgba(99,102,241,0.35)',
+        }}
+      >
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 220, height: 220, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+        <div style={{ position: 'relative' }}>
+          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 900, color: 'white', marginBottom: 16 }}>
+            {t('landing.ctaTitle', 'Ready to Make Your City Better?')}
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '1.05rem', lineHeight: 1.7, marginBottom: 36, maxWidth: 560, margin: '0 auto 36px' }}>
+            {t('landing.ctaSub', 'Join thousands of citizens who are actively shaping a smarter, cleaner city.')}
+          </p>
+          <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link to="/register">
+              <motion.button
+                whileHover={{ scale: 1.06, boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
+                whileTap={{ scale: 0.97 }}
+                style={{ padding: '14px 34px', borderRadius: 14, background: 'white', color: '#4f46e5', fontWeight: 700, fontSize: '1rem', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', gap: 8 }}
+              >
+                {t('landing.getStarted', 'Get Started')} <ArrowRight size={18} />
+              </motion.button>
+            </Link>
+            <Link to="/login">
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.97 }}
+                style={{ padding: '14px 34px', borderRadius: 14, background: 'transparent', color: 'white', border: '1.5px solid rgba(255,255,255,0.5)', fontWeight: 600, fontSize: '1rem', cursor: 'pointer' }}
+              >
+                {t('nav.login', 'Sign In')}
+              </motion.button>
+            </Link>
+          </div>
         </div>
-      </div>
-    </motion.div>
-  </section>
-);
+      </motion.div>
+    </section>
+  );
+};
 
 /* ─── Footer ─────────────────────────────────────────────────────────────────── */
-const Footer = ({ dark }) => (
-  <footer id="contact" style={{
-    padding: '60px 24px 40px',
-    borderTop: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'}`,
-    background: dark ? 'rgba(7,8,15,0.6)' : 'rgba(248,250,252,0.8)',
-  }}>
-    <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg, #6366f1, #22d3ee)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,0.4)' }}>
-          <Shield size={18} color="white" />
+const Footer = ({ dark }) => {
+  const { t } = useTranslation();
+  const navLinks = [
+    { key: 'home', label: t('nav.home', 'Home') },
+    { key: 'features', label: t('nav.features', 'Features') },
+    { key: 'how-it-works', label: t('nav.howItWorks', 'How it Works') },
+    { key: 'contact', label: t('nav.contact', 'Contact') }
+  ];
+  return (
+    <footer id="contact" style={{
+      padding: '60px 24px 40px',
+      borderTop: `1px solid ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)'}`,
+      background: dark ? 'rgba(7,8,15,0.6)' : 'rgba(248,250,252,0.8)',
+    }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 11, background: 'linear-gradient(135deg, #6366f1, #22d3ee)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,0.4)' }}>
+            <Shield size={18} color="white" />
+          </div>
+          <span style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.1rem', color: dark ? '#f1f5f9' : '#0f172a' }}>{t('app.title', 'SAMADHAN')}</span>
         </div>
-        <span style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.1rem', color: dark ? '#f1f5f9' : '#0f172a' }}>SAMADHAN</span>
+        <p style={{ color: dark ? '#475569' : '#64748b', fontSize: '0.88rem', maxWidth: 420, textAlign: 'center', lineHeight: 1.7 }}>
+          {t('footer.desc', 'Smart Administration & Monitoring System — Empowering citizens with transparent governance.')}
+        </p>
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
+          {navLinks.map(link => (
+            <a key={link.key} href={`#${link.key}`}
+              style={{ fontSize: '0.85rem', color: dark ? '#475569' : '#94a3b8', fontWeight: 500, transition: 'color 0.2s' }}
+              onMouseEnter={e => e.target.style.color = '#6366f1'}
+              onMouseLeave={e => e.target.style.color = dark ? '#475569' : '#94a3b8'}
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+        <div style={{ width: '100%', height: 1, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', margin: '4px 0' }} />
+        <p style={{ color: dark ? '#334155' : '#94a3b8', fontSize: '0.78rem' }}>© 2026 {t('app.title', 'SAMADHAN')}. {t('footer.rights', 'All rights reserved.')}</p>
       </div>
-      <p style={{ color: dark ? '#475569' : '#64748b', fontSize: '0.88rem', maxWidth: 420, textAlign: 'center', lineHeight: 1.7 }}>
-        Smart Administration & Monitoring System — Empowering citizens with transparent governance.
-      </p>
-      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {['Home', 'Features', 'How it Works', 'Contact'].map(link => (
-          <a key={link} href={`#${link.toLowerCase().replace(/ /g, '-')}`}
-            style={{ fontSize: '0.85rem', color: dark ? '#475569' : '#94a3b8', fontWeight: 500, transition: 'color 0.2s' }}
-            onMouseEnter={e => e.target.style.color = '#6366f1'}
-            onMouseLeave={e => e.target.style.color = dark ? '#475569' : '#94a3b8'}
-          >
-            {link}
-          </a>
-        ))}
-      </div>
-      <div style={{ width: '100%', height: 1, background: dark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)', margin: '4px 0' }} />
-      <p style={{ color: dark ? '#334155' : '#94a3b8', fontSize: '0.78rem' }}>© 2026 SAMADHAN. All rights reserved.</p>
-    </div>
-  </footer>
-);
+    </footer>
+  );
+};
 
 /* ─── Main Export ────────────────────────────────────────────────────────────── */
 export default function LandingPage() {

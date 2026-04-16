@@ -2,19 +2,21 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { User, Mail, Shield, Calendar } from 'lucide-react';
 import { getAvatarUrl } from '../../utils/avatar';
+import { useTranslation } from 'react-i18next';
 export default function UserProfile() {
+  const { t } = useTranslation();
   const { currentUser, dbUser } = useAuth();
 
   const infoItems = [
-    { icon: User, label: 'Full Name', value: currentUser?.displayName || 'N/A' },
-    { icon: Mail, label: 'Email Address', value: currentUser?.email || 'N/A' },
-    { icon: Shield, label: 'Account Role', value: dbUser?.role === 'admin' ? 'Administrator' : 'Citizen' },
-    { icon: Calendar, label: 'Member Since', value: dbUser?.createdAt ? new Date(dbUser.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A' },
+    { icon: User, label: t('auth.name', 'Full Name'), value: currentUser?.displayName || 'N/A' },
+    { icon: Mail, label: t('auth.email', 'Email Address'), value: currentUser?.email || 'N/A' },
+    { icon: Shield, label: t('auth.role', 'Account Role'), value: dbUser?.role === 'admin' ? t('nav.admin', 'Administrator') : t('nav.user', 'Citizen') },
+    { icon: Calendar, label: t('auth.memberSince', 'Member Since'), value: dbUser?.createdAt ? new Date(dbUser.createdAt).toLocaleDateString(t('app.locale', 'en-IN'), { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A' },
   ];
 
   return (
     <div className="page-enter">
-      <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem', marginBottom: 24 }}>Profile</h2>
+      <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem', marginBottom: 24 }}>{t('nav.profile', 'Profile')}</h2>
 
       {/* Profile Card */}
       <div style={{ maxWidth: 520 }}>
@@ -33,7 +35,7 @@ export default function UserProfile() {
           </h3>
           <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>{currentUser?.email}</p>
           <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 999, fontSize: '0.78rem', color: '#818cf8', fontWeight: 600 }}>
-            <Shield size={13} /> {dbUser?.role === 'admin' ? 'Administrator' : 'Verified Citizen'}
+            <Shield size={13} /> {dbUser?.role === 'admin' ? t('nav.admin', 'Administrator') : t('nav.verifiedUser', 'Verified Citizen')}
           </div>
         </div>
 
@@ -53,7 +55,7 @@ export default function UserProfile() {
         </div>
 
         <div style={{ marginTop: 20, padding: '14px 18px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, fontSize: '0.82rem', color: '#6ee7b7', lineHeight: 1.6 }}>
-          🔒 Your profile is managed by Google. To update your name or photo, update your Google Account.
+          🔒 {t('auth.managedMsg', 'Your profile is managed by Google. To update your name or photo, update your Google Account.')}
         </div>
       </div>
     </div>

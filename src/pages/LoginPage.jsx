@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { signInWithEmailAndPassword, signInWithPopup, auth, googleProvider } from '../firebase';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 /* ─── Helpers ────────────────────────────────────────────────────────────────── */
 const isDark = () => !document.body.classList.contains('light-mode');
@@ -101,6 +103,7 @@ const ErrorBanner = ({ msg }) => (
 
 /* ─── Main Component ─────────────────────────────────────────────────────────── */
 export default function LoginPage() {
+  const { t } = useTranslation();
   const dark = useThemeMode();
   const [tab, setTab] = useState('user');
   const [email, setEmail] = useState('');
@@ -116,36 +119,36 @@ export default function LoginPage() {
     setLoading(true); setError('');
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success('Welcome back! 🎉');
+      toast.success(t('auth.loginSuccess', 'Welcome back! 🎉'));
       navigate('/dashboard');
     } catch {
-      setError('Google sign-in failed. Please try again.');
-      toast.error('Sign-in failed');
+      setError(t('auth.errGoogleFail', 'Google sign-in failed. Please try again.'));
+      toast.error(t('auth.errSignInFail', 'Sign-in failed'));
     } finally { setLoading(false); }
   };
 
   const handleEmailLogin = async (e, role) => {
     e.preventDefault(); setLoading(true); setError('');
     const errorMap = {
-      'auth/wrong-password': 'Incorrect password.',
-      'auth/user-not-found': 'No account found with this email.',
-      'auth/invalid-email': 'Invalid email address.',
-      'auth/too-many-requests': 'Too many attempts. Try again later.',
-      'auth/invalid-credential': 'Invalid credentials. Check your email and password.',
+      'auth/wrong-password': t('auth.errWrongPass', 'Incorrect password.'),
+      'auth/user-not-found': t('auth.errNoUser', 'No account found with this email.'),
+      'auth/invalid-email': t('auth.errInvalidEmail', 'Invalid email address.'),
+      'auth/too-many-requests': t('auth.errTooManyRequests', 'Too many attempts. Try again later.'),
+      'auth/invalid-credential': t('auth.errInvalidCreds', 'Invalid credentials. Check your email and password.'),
     };
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success(role === 'admin' ? 'Welcome, Admin! 🛡️' : 'Worker login successful! 👷');
+      toast.success(role === 'admin' ? t('auth.welcomeAdmin', 'Welcome, Admin! 🛡️') : t('auth.welcomeWorker', 'Worker login successful! 👷'));
       navigate(role === 'admin' ? '/admin' : '/worker');
     } catch (err) {
-      setError(errorMap[err.code] || 'Login failed. Check your credentials.');
+      setError(errorMap[err.code] || t('auth.errLoginFail', 'Login failed. Check your credentials.'));
     } finally { setLoading(false); }
   };
 
   const tabs = [
-    { id: 'user', label: 'Citizen', icon: Users, color: '#6366f1', accent: 'rgba(99,102,241,0.15)' },
-    { id: 'worker', label: 'Worker', icon: Wrench, color: '#10b981', accent: 'rgba(16,185,129,0.15)' },
-    { id: 'admin', label: 'Admin', icon: Shield, color: '#f59e0b', accent: 'rgba(245,158,11,0.15)' },
+    { id: 'user', label: t('nav.user', 'Citizen'), icon: Users, color: '#6366f1', accent: 'rgba(99,102,241,0.15)' },
+    { id: 'worker', label: t('nav.worker', 'Worker'), icon: Wrench, color: '#10b981', accent: 'rgba(16,185,129,0.15)' },
+    { id: 'admin', label: t('nav.admin', 'Admin'), icon: Shield, color: '#f59e0b', accent: 'rgba(245,158,11,0.15)' },
   ];
   const activeTab = tabs.find(t => t.id === tab);
   const accentColor = activeTab?.color || '#6366f1';
@@ -172,10 +175,11 @@ export default function LoginPage() {
         backgroundSize: '50px 50px',
       }} />
 
-      {/* Back button */}
-      <Link to="/" style={{ position: 'fixed', top: 20, left: 20, zIndex: 10 }}>
-        <motion.div
-          whileHover={{ x: -3, scale: 1.05 }}
+      {/* Back button and Language Switcher */}
+      <div style={{ position: 'fixed', top: 20, left: 20, zIndex: 10, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <Link to="/">
+          <motion.div
+            whileHover={{ x: -3, scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           style={{
             display: 'flex', alignItems: 'center', gap: 7,
@@ -187,9 +191,11 @@ export default function LoginPage() {
             backdropFilter: 'blur(12px)',
           }}
         >
-          <ArrowLeft size={15} /> Back
-        </motion.div>
-      </Link>
+          <ArrowLeft size={15} /> {t('nav.back', 'Back')}
+          </motion.div>
+        </Link>
+        <LanguageSwitcher />
+      </div>
 
       {/* Card */}
       <motion.div
@@ -232,10 +238,10 @@ export default function LoginPage() {
               </motion.div>
             </Link>
             <h1 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.65rem', color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 6 }}>
-              Welcome Back 👋
+              {t('auth.welcomeBack', 'Welcome Back 👋')}
             </h1>
             <p style={{ color: dark ? '#64748b' : '#94a3b8', fontSize: '0.88rem' }}>
-              Sign in to continue to your account
+              {t('auth.signInSub', 'Sign in to continue to your account')}
             </p>
           </div>
 
@@ -282,14 +288,11 @@ export default function LoginPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {/* Citizen info box */}
                   <div style={{
-                    padding: '14px 16px', borderRadius: 14,
-                    background: dark ? 'rgba(99,102,241,0.1)' : 'rgba(99,102,241,0.07)',
-                    border: `1px solid rgba(99,102,241,0.2)`,
                     fontSize: '0.84rem', color: dark ? '#a5b4fc' : '#4f46e5',
                     lineHeight: 1.6, textAlign: 'center',
                   }}>
                     <Sparkles size={14} style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-top' }} />
-                    Citizens and residents sign in instantly using Google — no password needed.
+                    {t('auth.citizenLoginHint', 'Citizens and residents sign in instantly using Google — no password needed.')}
                   </div>
 
                   {error && <ErrorBanner msg={error} />}
@@ -309,12 +312,12 @@ export default function LoginPage() {
                       boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
                     }}
                   >
-                    <GoogleIcon /> {loading ? 'Signing in…' : 'Continue with Google'}
+                    <GoogleIcon /> {loading ? t('auth.signingIn', 'Signing in…') : t('auth.continueGoogle', 'Continue with Google')}
                   </motion.button>
 
                   <div style={{ textAlign: 'center', fontSize: '0.83rem', color: dark ? '#475569' : '#94a3b8', marginTop: 4 }}>
-                    Don't have an account?{' '}
-                    <Link to="/register" style={{ color: '#818cf8', fontWeight: 700 }}>Register here</Link>
+                    {t('auth.noAccount', "Don't have an account?")}{' '}
+                    <Link to="/register" style={{ color: '#818cf8', fontWeight: 700 }}>{t('auth.registerHere', 'Register here')}</Link>
                   </div>
                 </div>
               ) : (
@@ -327,15 +330,15 @@ export default function LoginPage() {
                     textAlign: 'center',
                   }}>
                     {tab === 'admin'
-                      ? '🛡️ Admin portal — for administrative staff only.'
-                      : '👷 Worker portal — view and resolve your assigned complaints.'}
+                      ? t('auth.adminLoginHint', '🛡️ Admin portal — for administrative staff only.')
+                      : t('auth.workerLoginHint', '👷 Worker portal — view and resolve your assigned complaints.')}
                   </div>
 
                   {error && <ErrorBanner msg={error} />}
 
                   <InputField
                     id={`${tab}-email`}
-                    label="Email Address"
+                    label={t('auth.email', 'Email Address')}
                     type="email"
                     icon={Mail}
                     placeholder={tab === 'admin' ? 'admin@samadhan.gov.in' : 'worker@samadhan.com'}
@@ -348,10 +351,10 @@ export default function LoginPage() {
 
                   <InputField
                     id={`${tab}-password`}
-                    label="Password"
+                    label={t('auth.password', 'Password')}
                     type={showPass ? 'text' : 'password'}
                     icon={Lock}
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -383,7 +386,7 @@ export default function LoginPage() {
                       marginTop: 4,
                     }}
                   >
-                    {loading ? 'Signing in…' : `Sign In as ${tab === 'admin' ? 'Admin' : 'Worker'}`}
+                    {loading ? t('auth.signingIn', 'Signing in…') : t('auth.loginBtn', 'Sign In')}
                   </motion.button>
                 </form>
               )}
@@ -400,7 +403,7 @@ export default function LoginPage() {
           fontSize: '0.75rem',
           color: dark ? '#334155' : '#94a3b8',
         }}>
-          🔒 Secured by Google OAuth · SAMADHAN © 2026
+          🔒 {t('auth.footerSecure', 'Secured by Google OAuth')} · {t('app.title', 'SAMADHAN')} © 2026
         </div>
       </motion.div>
 

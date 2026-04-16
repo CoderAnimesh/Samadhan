@@ -6,18 +6,20 @@ import { useAuth } from '../../context/AuthContext';
 import { signOut, auth } from '../../firebase';
 import toast from 'react-hot-toast';
 import { getAvatarUrl } from '../../utils/avatar';
-
-const navItems = [
-  { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-  { id: 'complaints', icon: FileText, label: 'All Complaints' },
-  { id: 'workers', icon: Users, label: 'Manage Workers' },
-  { id: 'notifications', icon: Bell, label: 'Activity Feed' },
-  { id: 'settings', icon: Settings, label: 'Settings' },
-];
+import { useTranslation } from 'react-i18next';
 
 export default function AdminSidebar({ activeTab, setActiveTab }) {
+  const { t } = useTranslation();
   const { currentUser, dbUser } = useAuth();
   const navigate = useNavigate();
+
+  const navItems = [
+    { id: 'overview', icon: LayoutDashboard, label: t('admin.overview', 'Overview') },
+    { id: 'complaints', icon: FileText, label: t('admin.complaints', 'All Complaints') },
+    { id: 'workers', icon: Users, label: t('admin.workers', 'Manage Workers') },
+    { id: 'notifications', icon: Bell, label: t('nav.notifications', 'Activity Feed') },
+    { id: 'settings', icon: Settings, label: t('nav.settings', 'Settings') },
+  ];
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -84,7 +86,7 @@ export default function AdminSidebar({ activeTab, setActiveTab }) {
       {/* Logout */}
       <div style={{ padding: '16px', borderTop: '1px solid var(--border)' }}>
         <motion.button onClick={handleLogout} whileHover={{ x: 3 }} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', borderRadius: 10, border: 'none', cursor: 'pointer', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontWeight: 500, fontSize: '0.88rem' }}>
-          <LogOut size={17} /> Logout
+          <LogOut size={17} /> {t('nav.logout', 'Logout')}
         </motion.button>
       </div>
     </div>

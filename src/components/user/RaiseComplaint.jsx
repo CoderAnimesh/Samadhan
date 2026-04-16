@@ -1,7 +1,8 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { GoogleMap, useLoadScript, Marker, Circle } from '@react-google-maps/api';
-import { MapPin, Send, Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import { MapPin, Send, Loader, AlertCircle, CheckCircle, Mic, MicOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../../api';
 import toast from 'react-hot-toast';
 
@@ -19,6 +20,7 @@ const MAP_STYLE = [
 const CATEGORIES = ['Road/Pothole', 'Water Supply', 'Electricity', 'Sanitation/Garbage', 'Drainage', 'Street Lights', 'Tree/Park', 'Noise Pollution', 'Other'];
 
 export default function RaiseComplaint({ onSuccess }) {
+  const { t, i18n } = useTranslation();
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: apiKey || '',
@@ -32,8 +34,66 @@ export default function RaiseComplaint({ onSuccess }) {
   const [locError, setLocError] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  // Speech Recognition
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      
+      recognitionRef.current.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript;
+          }
+        }
+        if (transcript) {
+          setDescription((prev) => {
+            const separator = prev && !prev.endsWith(' ') ? ' ' : '';
+            return prev + separator + transcript.trim();
+          });
+        }
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error("Speech recognition error", event.error);
+        setIsListening(false);
+      };
+      
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, [SpeechRecognition]);
+  
+  useEffect(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = i18n.language.startsWith('hi') ? 'hi-IN' : 'en-US';
+    }
+  }, [i18n.language]);
+
+  const toggleListening = (e) => {
+    e.preventDefault();
+    if (isListening) {
+      recognitionRef.current?.stop();
+    } else {
+      if(recognitionRef.current) {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } else {
+        toast.error("Voice recognition is not supported in this browser.");
+      }
+    }
+  };
 
   // Auto-fetch location on mount
   useEffect(() => { fetchLocation(); }, []);
@@ -97,14 +157,21 @@ export default function RaiseComplaint({ onSuccess }) {
     if (!location) { toast.error('Please allow location access.'); return; }
     if (!category) { toast.error('Please select a category.'); return; }
     if (description.length < 20) { toast.error('Please describe the problem in at least 20 characters.'); return; }
+    if (!imageFile) { toast.error('Please capture a live image of the problem.'); return; }
 
     setSubmitting(true);
     try {
-      await api.post('/complaints', {
-        category, description,
-        latitude: location.lat,
-        longitude: location.lng,
-        address, area,
+      const formData = new FormData();
+      formData.append('category', category);
+      formData.append('description', description);
+      formData.append('latitude', location.lat);
+      formData.append('longitude', location.lng);
+      formData.append('address', address);
+      formData.append('area', area);
+      formData.append('image', imageFile);
+
+      await api.post('/complaints', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSubmitted(true);
       toast.success('Complaint raised successfully! 🎉');
@@ -114,10 +181,15 @@ export default function RaiseComplaint({ onSuccess }) {
         setSubmitted(false);
         setCategory('');
         setDescription('');
+        setImageFile(null);
         fetchLocation();
       }, 3000);
     } catch (err) {
-      toast.error('Failed to submit complaint. Please try again.');
+      if (err.response?.data?.error) {
+        toast.error(err.response.data.error);
+      } else {
+        toast.error('Failed to submit complaint. Please try again.');
+      }
     } finally {
       setSubmitting(false);
     }
@@ -144,18 +216,18 @@ export default function RaiseComplaint({ onSuccess }) {
 
   return (
     <div className="page-enter">
-      <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem', marginBottom: 6 }}>Raise a Complaint</h2>
-      <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: 24 }}>Your location is auto-detected. Describe the issue and submit.</p>
+      <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem', marginBottom: 6 }}>{t('dashboard.raise', 'Raise a Complaint')}</h2>
+      <p style={{ color: '#94a3b8', fontSize: '0.88rem', marginBottom: 24 }}>{t('dashboard.locAuto', 'Your location is auto-detected. Describe the issue and submit.')}</p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
         {/* Map Panel */}
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <MapPin size={18} color="#6366f1" /> Your Location
+              <MapPin size={18} color="#6366f1" /> {t('complaint.location', 'Your Location')}
             </h3>
             <button onClick={fetchLocation} disabled={locLoading} className="btn btn-outline btn-sm">
-              {locLoading ? <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Detecting…</> : '🎯 Re-detect'}
+              {locLoading ? <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> {t('complaint.detecting', 'Detecting…')}</> : `🎯 ${t('complaint.redetect', 'Re-detect')}`}
             </button>
           </div>
 
@@ -211,20 +283,20 @@ export default function RaiseComplaint({ onSuccess }) {
                 </div>
               ) : (
                 <>
-                  <div style={{ fontSize: '0.78rem', color: '#818cf8', fontWeight: 600, marginBottom: 4 }}>📍 DETECTED LOCATION</div>
+                  <div style={{ fontSize: '0.78rem', color: '#818cf8', fontWeight: 600, marginBottom: 4 }}>📍 {t('complaint.detectedLoc', 'DETECTED LOCATION')}</div>
                   <div style={{ fontSize: '0.85rem', color: '#e2e8f0' }}>{address}</div>
-                  {area && <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: 3 }}>Area: {area}</div>}
+                  {area && <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: 3 }}>{t('complaint.area', 'Area')}: {area}</div>}
                 </>
               )}
             </div>
           )}
-          <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: 8 }}>💡 Click anywhere on the map to adjust the complaint location.</p>
+          <p style={{ fontSize: '0.75rem', color: '#475569', marginTop: 8 }}>💡 {t('complaint.mapTip', 'Click anywhere on the map to adjust the complaint location.')}</p>
         </div>
 
         {/* Form Panel */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div className="form-group">
-            <label className="form-label">Problem Category *</label>
+            <label className="form-label">{t('complaint.category', 'Problem Category')} *</label>
             <select
               id="complaint-category"
               className="form-select"
@@ -232,30 +304,48 @@ export default function RaiseComplaint({ onSuccess }) {
               onChange={e => setCategory(e.target.value)}
               required
             >
-              <option value="">Select a category…</option>
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">{t('complaint.selectCat', 'Select a category…')}</option>
+              {CATEGORIES.map(c => <option key={c} value={c}>{t(`complaint.cats.${c}`, c)}</option>)}
             </select>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Describe the Problem *</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>{t('complaint.description', 'Describe the Problem')} *</label>
+              {SpeechRecognition && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    padding: '4px 10px', borderRadius: 8, border: 'none',
+                    background: isListening ? 'rgba(239,68,68,0.15)' : 'rgba(99,102,241,0.15)',
+                    color: isListening ? '#f87171' : '#818cf8', cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 600, transition: 'all 0.2s'
+                  }}
+                >
+                  {isListening ? <><MicOff size={14} /> {t('complaint.stop', 'Stop')}</> : <><Mic size={14} /> {t('complaint.voice', 'Dictate Problem')}</>}
+                </button>
+              )}
+            </div>
+            
             <textarea
               id="complaint-description"
               className="form-textarea"
               style={{ minHeight: 140 }}
-              placeholder="Please describe the issue in detail. What exactly is wrong? Since when? Any specific location details…"
+              placeholder={t('complaint.placeholder', 'Please describe the issue in detail...')}
               value={description}
               onChange={e => setDescription(e.target.value)}
               minLength={20}
               required
             />
             <span style={{ fontSize: '0.75rem', color: description.length < 20 ? '#f59e0b' : '#10b981', marginTop: 2 }}>
-              {description.length}/20 minimum characters
+              {description.length}/20 {t('complaint.minChars', 'minimum characters')}
             </span>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Location Address</label>
+            <label className="form-label">{t('complaint.location', 'Location Address')}</label>
             <input
               className="form-input"
               value={address}
@@ -265,13 +355,29 @@ export default function RaiseComplaint({ onSuccess }) {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Area / Locality</label>
+            <label className="form-label">{t('complaint.area', 'Area / Locality')}</label>
             <input
               className="form-input"
               value={area}
               onChange={e => setArea(e.target.value)}
               placeholder="Area name…"
             />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">{t('complaint.image', 'Live Image Capture')} *</label>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="form-input"
+              style={{ padding: '10px 14px', background: 'var(--bg-card)', color: '#e2e8f0', border: '1px solid var(--border)', borderRadius: 10 }}
+              onChange={e => setImageFile(e.target.files[0])}
+              required
+            />
+            <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 4 }}>
+              📷 {t('complaint.imagePrompt', 'Please capture a clear, real-time photo of the issue.')}
+            </span>
           </div>
 
           <motion.button
@@ -291,7 +397,7 @@ export default function RaiseComplaint({ onSuccess }) {
             {submitting ? (
               <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Submitting…</>
             ) : (
-              <><Send size={18} /> Submit Complaint</>
+              <><Send size={18} /> {t('complaint.submit', 'Submit Complaint')}</>
             )}
           </motion.button>
 

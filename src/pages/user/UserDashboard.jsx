@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, Bell } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 import { useAuth } from '../../context/AuthContext';
 import UserSidebar from '../../components/user/UserSidebar';
 import UserOverview from '../../components/user/UserOverview';
@@ -10,21 +12,24 @@ import Notifications from '../../components/user/Notifications';
 import UserProfile from '../../components/user/UserProfile';
 import { getAvatarUrl } from '../../utils/avatar';
 
-const tabTitles = {
-  overview: 'Dashboard Overview',
-  raise: 'Raise a Complaint',
-  complaints: 'My Complaints',
-  notifications: 'Notifications',
-  profile: 'My Profile',
-};
+
 
 export default function UserDashboard() {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const firstName = currentUser?.displayName?.split(' ')[0] || 'there';
+  const tabTitles = {
+    overview: t('admin.overview', 'Overview'),
+    raise: t('dashboard.raise', 'Raise Complaint'),
+    complaints: t('dashboard.myComplaints', 'My Complaints'),
+    notifications: t('nav.notifications', 'Notifications'),
+    profile: t('nav.profile', 'Profile'),
+  };
+
+  const firstName = currentUser?.displayName?.split(' ')[0] || t('common.user', 'User');
 
   const renderContent = () => {
     const props = { key: activeTab };
@@ -71,7 +76,7 @@ export default function UserDashboard() {
             <div>
               {activeTab === 'overview' && (
                 <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 400, fontSize: '0.9rem', color: '#94a3b8', marginBottom: 1 }}>
-                  👋 Hi <span style={{ fontWeight: 700, color: '#818cf8' }}>{firstName}</span>, welcome back!
+                  👋 {t('dashboard.welcome', 'Welcome back')}, <span style={{ fontWeight: 700, color: '#818cf8' }}>{firstName}</span>!
                 </div>
               )}
               <h1 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.2rem' }}>
@@ -81,6 +86,8 @@ export default function UserDashboard() {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <LanguageSwitcher />
+            
             <button
               onClick={() => setActiveTab('notifications')}
               style={{ position: 'relative', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#94a3b8', transition: 'all 0.2s' }}

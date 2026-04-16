@@ -2,7 +2,7 @@ import axios from 'axios';
 import { auth } from './firebase';
 
 const api = axios.create({
-  baseURL: "https://ram-final-backend.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3001',
   headers: { 'Content-Type': 'application/json' },
 });
 

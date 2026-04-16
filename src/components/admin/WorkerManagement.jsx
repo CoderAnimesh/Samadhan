@@ -1,24 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Phone, MapPin, Wrench, X, AlertCircle } from 'lucide-react';
+import { X, Plus, AlertCircle, Trash2, Phone, MapPin, Wrench } from 'lucide-react';
 import api from '../../api';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 function AddWorkerModal({ onClose, onAdded }) {
+  const { t } = useTranslation();
   const [form, setForm] = useState({ name: '', phone: '', area: '', specialization: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
 
   const handle = async (e) => {
     e.preventDefault();
-    if (!form.name.trim()) return toast.error('Name is required');
+    if (!form.name.trim()) return toast.error(t('admin.nameRequired', 'Name is required'));
     setLoading(true);
     try {
       const r = await api.post('/workers', form);
       onAdded(r.data.worker);
-      toast.success('Worker added!');
+      toast.success(t('admin.workerAdded', 'Worker added!'));
       onClose();
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to add worker');
+      toast.error(err.response?.data?.error || t('admin.addWorkerFail', 'Failed to add worker'));
     } finally {
       setLoading(false);
     }
@@ -35,43 +37,43 @@ function AddWorkerModal({ onClose, onAdded }) {
         style={{ maxWidth: 440 }}
       >
         <div className="modal-header">
-          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>Add New Worker</h2>
+          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.1rem' }}>{t('admin.addNewWorker', 'Add New Worker')}</h2>
           <button onClick={onClose} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#94a3b8' }}><X size={16} /></button>
         </div>
         <form onSubmit={handle} className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div className="form-group">
-            <label className="form-label">Full Name *</label>
-            <input className="form-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Worker's full name" required />
+            <label className="form-label">{t('auth.name', 'Full Name')} *</label>
+            <input className="form-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder={t('admin.workerNamePlaceholder', "Worker's full name")} required />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
             <div className="form-group">
-              <label className="form-label">Email *</label>
+              <label className="form-label">{t('auth.email', 'Email')} *</label>
               <input type="email" className="form-input" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="worker@samadhan.com" required />
             </div>
             <div className="form-group">
-              <label className="form-label">Password *</label>
-              <input type="text" className="form-input" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder="Min 6 chars" required minLength={6} />
+              <label className="form-label">{t('auth.password', 'Password')} *</label>
+              <input type="text" className="form-input" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} placeholder={t('auth.passMinChars', 'Min 6 chars')} required minLength={6} />
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Phone Number</label>
+            <label className="form-label">{t('auth.phone', 'Phone Number')}</label>
             <input className="form-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="+91 98765 43210" />
           </div>
           <div className="form-group">
-            <label className="form-label">Area / Zone</label>
-            <input className="form-input" value={form.area} onChange={e => setForm(p => ({ ...p, area: e.target.value }))} placeholder="e.g. Raipur North" />
+            <label className="form-label">{t('complaint.area', 'Area / Zone')}</label>
+            <input className="form-input" value={form.area} onChange={e => setForm(p => ({ ...p, area: e.target.value }))} placeholder={t('complaint.areaPlaceholder', 'e.g. Raipur North')} />
           </div>
           <div className="form-group">
-            <label className="form-label">Specialization</label>
+            <label className="form-label">{t('admin.specialization', 'Specialization')}</label>
             <select className="form-select" value={form.specialization} onChange={e => setForm(p => ({ ...p, specialization: e.target.value }))}>
-              <option value="">General</option>
-              {['Road/Pothole', 'Water Supply', 'Electricity', 'Sanitation', 'Drainage', 'Street Lights', 'General'].map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">{t('complaint.cats.General', 'General')}</option>
+              {['Road/Pothole', 'Water Supply', 'Electricity', 'Sanitation', 'Drainage', 'Street Lights', 'General'].map(s => <option key={s} value={s}>{t(`complaint.cats.${s}`, s)}</option>)}
             </select>
           </div>
           <div className="modal-footer" style={{ padding: 0, border: 'none', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} className="btn btn-outline">Cancel</button>
+            <button type="button" onClick={onClose} className="btn btn-outline">{t('common.cancel', 'Cancel')}</button>
             <button type="submit" disabled={loading} className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
-              {loading ? 'Adding…' : 'Add Worker'}
+              {loading ? t('common.adding', 'Adding…') : t('admin.addWorkerBtn', 'Add Worker')}
             </button>
           </div>
         </form>
@@ -81,6 +83,7 @@ function AddWorkerModal({ onClose, onAdded }) {
 }
 
 export default function WorkerManagement() {
+  const { t } = useTranslation();
   const [workers, setWorkers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -93,13 +96,13 @@ export default function WorkerManagement() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm('Remove this worker?')) return;
+    if (!confirm(t('admin.confirmRemoveWorker', 'Remove this worker?'))) return;
     try {
       await api.delete(`/workers/${id}`);
       setWorkers(prev => prev.filter(w => w.id !== id));
-      toast.success('Worker removed');
+      toast.success(t('admin.workerRemoved', 'Worker removed'));
     } catch {
-      toast.error('Failed to remove worker');
+      toast.error(t('admin.removeFail', 'Failed to remove worker'));
     }
   };
 
@@ -108,7 +111,7 @@ export default function WorkerManagement() {
       const r = await api.patch(`/workers/${worker.id}`, { ...worker, isAvailable: !worker.isAvailable });
       setWorkers(prev => prev.map(w => w.id === worker.id ? r.data.worker : w));
     } catch {
-      toast.error('Failed to update');
+      toast.error(t('common.failedUpdate', 'Failed to update'));
     }
   };
 
@@ -118,20 +121,20 @@ export default function WorkerManagement() {
     <div className="page-enter">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem' }}>Manage Workers</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 2 }}>{workers.length} workers · {workers.filter(w => w.isAvailable).length} available</p>
+          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem' }}>{t('admin.manageWorkers', 'Manage Workers')}</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 2 }}>{workers.length} {t('admin.workersCount', 'workers')} · {workers.filter(w => w.isAvailable).length} {t('admin.availableCount', 'available')}</p>
         </div>
         <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)', display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Plus size={16} /> Add Worker
+          <Plus size={16} /> {t('admin.addWorkerBtn', 'Add Worker')}
         </button>
       </div>
 
       {workers.length === 0 ? (
         <div className="empty-state">
           <AlertCircle size={48} />
-          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>No Workers Yet</h3>
-          <p style={{ fontSize: '0.85rem' }}>Add workers to start assigning complaints.</p>
-          <button onClick={() => setShowModal(true)} className="btn btn-primary">Add First Worker</button>
+          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>{t('admin.noWorkers', 'No Workers Yet')}</h3>
+          <p style={{ fontSize: '0.85rem' }}>{t('admin.noWorkersSub', 'Add workers to start assigning complaints.')}</p>
+          <button onClick={() => setShowModal(true)} className="btn btn-primary">{t('admin.addFirstWorker', 'Add First Worker')}</button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
@@ -162,7 +165,7 @@ export default function WorkerManagement() {
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{worker.name}</div>
                     <div style={{ fontSize: '0.72rem', color: worker.isAvailable ? '#f59e0b' : '#64748b', fontWeight: 600 }}>
-                      {worker.isAvailable ? '● Available' : '○ Unavailable'}
+                      {worker.isAvailable ? `● ${t('dashboard.available', 'Available')}` : `○ ${t('dashboard.unavailable', 'Unavailable')}`}
                     </div>
                   </div>
                 </div>
@@ -174,7 +177,7 @@ export default function WorkerManagement() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.8rem', color: '#94a3b8', marginBottom: 14 }}>
                 {worker.phone && <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Phone size={12} /> {worker.phone}</div>}
                 {worker.area && <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><MapPin size={12} /> {worker.area}</div>}
-                {worker.specialization && <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Wrench size={12} /> {worker.specialization}</div>}
+                {worker.specialization && <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}><Wrench size={12} /> {t(`complaint.cats.${worker.specialization}`, worker.specialization)}</div>}
               </div>
 
               <button
@@ -186,7 +189,7 @@ export default function WorkerManagement() {
                   color: worker.isAvailable ? '#f87171' : '#6ee7b7',
                 }}
               >
-                {worker.isAvailable ? 'Mark Unavailable' : 'Mark Available'}
+                {worker.isAvailable ? t('admin.markUnavailable', 'Mark Unavailable') : t('admin.markAvailable', 'Mark Available')}
               </button>
             </motion.div>
           ))}

@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import { signInWithPopup, auth, googleProvider } from '../firebase';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 /* ─── Theme hook ─────────────────────────────────────────────────────────────── */
 const isDark = () => !document.body.classList.contains('light-mode');
@@ -66,6 +68,7 @@ const PerkRow = ({ icon: Icon, text, color, delay, dark }) => (
 
 /* ─── Main ───────────────────────────────────────────────────────────────────── */
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const dark = useThemeMode();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -74,10 +77,10 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
-      toast.success('Account created! Welcome to SAMADHAN 🎉');
+      toast.success(t('auth.accountCreated', 'Account created! Welcome to SAMADHAN 🎉'));
       navigate('/dashboard');
     } catch (err) {
-      toast.error('Registration failed. Please try again.');
+      toast.error(t('auth.errRegFail', 'Registration failed. Please try again.'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -85,12 +88,12 @@ export default function RegisterPage() {
   };
 
   const perks = [
-    { icon: MapPin, text: 'Raise complaints with live GPS location', color: '#6366f1' },
-    { icon: Eye, text: 'Track your complaint status in real-time', color: '#22d3ee' },
-    { icon: Bell, text: 'Get notified instantly at every stage', color: '#f59e0b' },
-    { icon: Lock, text: 'Secure login — powered by Google', color: '#10b981' },
-    { icon: Zap, text: 'Zero paperwork, fully digital process', color: '#f97316' },
-    { icon: Star, text: '98% satisfaction rate from citizens', color: '#a855f7' },
+    { icon: MapPin, text: t('landing.feat1Desc', 'Raise complaints with live GPS location'), color: '#6366f1' },
+    { icon: Eye, text: t('landing.feat2Desc', 'Track your complaint status in real-time'), color: '#22d3ee' },
+    { icon: Bell, text: t('landing.feat4Desc', 'Get notified instantly at every stage'), color: '#f59e0b' },
+    { icon: Lock, text: t('auth.secureGoogle', 'Secure login — powered by Google'), color: '#10b981' },
+    { icon: Zap, text: t('landing.zeroPaperwork', 'Zero paperwork, fully digital process'), color: '#f97316' },
+    { icon: Star, text: t('landing.satisfactionRate', '98% satisfaction rate from citizens'), color: '#a855f7' },
   ];
 
   const pageBg = dark
@@ -108,9 +111,10 @@ export default function RegisterPage() {
       <Orb style={{ bottom: '5%', right: '-5%', width: 450, height: 450 }} color={dark ? 'rgba(34,211,238,0.09)' : 'rgba(34,211,238,0.06)'} dur={12} delay={2} />
       <Orb style={{ top: '40%', left: '40%', width: 350, height: 350 }} color={dark ? 'rgba(168,85,247,0.07)' : 'rgba(168,85,247,0.05)'} dur={8} delay={1} />
 
-      {/* Back */}
-      <Link to="/" style={{ position: 'fixed', top: 20, left: 20, zIndex: 10 }}>
-        <motion.div
+      {/* Back button and Language Switcher */}
+      <div style={{ position: 'fixed', top: 20, left: 20, zIndex: 10, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <Link to="/">
+          <motion.div
           whileHover={{ x: -3, scale: 1.05 }} whileTap={{ scale: 0.95 }}
           style={{
             display: 'flex', alignItems: 'center', gap: 7,
@@ -121,9 +125,11 @@ export default function RegisterPage() {
             fontSize: '0.82rem', fontWeight: 600, backdropFilter: 'blur(12px)',
           }}
         >
-          <ArrowLeft size={15} /> Back
-        </motion.div>
-      </Link>
+          <ArrowLeft size={15} /> {t('nav.back', 'Back')}
+          </motion.div>
+        </Link>
+        <LanguageSwitcher />
+      </div>
 
       {/* ── Left Panel ──────────────────────────────────────────────────── */}
       <motion.div
@@ -158,8 +164,8 @@ export default function RegisterPage() {
               <Shield size={26} color="white" />
             </div>
             <div>
-              <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.3rem', color: dark ? '#f1f5f9' : '#0f172a', letterSpacing: '-0.5px' }}>SAMADHAN</div>
-              <div style={{ fontSize: '0.6rem', color: dark ? 'rgba(148,163,184,0.8)' : 'rgba(71,85,105,0.8)', letterSpacing: 1.5, textTransform: 'uppercase' }}>Smart Admin System</div>
+              <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '1.3rem', color: dark ? '#f1f5f9' : '#0f172a', letterSpacing: '-0.5px' }}>{t('app.title', 'SAMADHAN')}</div>
+              <div style={{ fontSize: '0.6rem', color: dark ? 'rgba(148,163,184,0.8)' : 'rgba(71,85,105,0.8)', letterSpacing: 1.5, textTransform: 'uppercase' }}>{t('app.subtitle', 'Smart Admin System')}</div>
             </div>
           </motion.div>
         </Link>
@@ -169,9 +175,9 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
           style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem, 3vw, 2.8rem)', lineHeight: 1.15, marginBottom: 14, color: dark ? '#f1f5f9' : '#0f172a' }}
         >
-          Make Your Voice<br />
+          {t('landing.registerHeroTitle1', 'Make Your Voice')}<br />
           <span style={{ background: 'linear-gradient(135deg, #818cf8, #22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
-            Heard & Resolved
+            {t('landing.registerHeroTitle2', 'Heard & Resolved')}
           </span>
         </motion.h1>
 
@@ -194,7 +200,7 @@ export default function RegisterPage() {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9 }}
           style={{ display: 'flex', gap: 28, marginTop: 48, flexWrap: 'wrap' }}
         >
-          {[{ val: '10K+', label: 'Resolved' }, { val: '98%', label: 'Satisfaction' }, { val: '50+', label: 'Workers' }].map(s => (
+          {[{ val: '10K+', label: t('landing.stats1Label', 'Resolved') }, { val: '98%', label: t('landing.stats2Label', 'Satisfaction') }, { val: '50+', label: t('landing.stats4Label', 'Workers') }].map(s => (
             <div key={s.label} style={{ textAlign: 'center' }}>
               <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 900, fontSize: '1.5rem', background: 'linear-gradient(135deg,#818cf8,#22d3ee)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{s.val}</div>
               <div style={{ fontSize: '0.72rem', color: dark ? '#475569' : '#94a3b8', fontWeight: 500, marginTop: 2 }}>{s.label}</div>
@@ -222,10 +228,10 @@ export default function RegisterPage() {
 
         <div>
           <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 800, fontSize: '2rem', marginBottom: 8, color: dark ? '#f1f5f9' : '#0f172a' }}>
-            Get Started 🚀
+            {t('auth.registerTitle', 'Create Account')} 🚀
           </h2>
           <p style={{ color: dark ? '#64748b' : '#94a3b8', fontSize: '0.88rem', marginBottom: 36, lineHeight: 1.65 }}>
-            Register instantly with Google. No passwords to remember. One click and you're in.
+            {t('auth.registerSub', 'Register instantly with Google. No passwords to remember. One click and you\'re in.')}
           </p>
 
           {/* Google Button */}
@@ -246,13 +252,13 @@ export default function RegisterPage() {
             }}
           >
             <GoogleIcon />
-            {loading ? 'Creating account…' : 'Continue with Google'}
+            {loading ? t('auth.creatingAccount', 'Creating account…') : t('auth.continueGoogle', 'Continue with Google')}
           </motion.button>
 
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
             <div style={{ flex: 1, height: 1, background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
-            <span style={{ color: dark ? '#334155' : '#94a3b8', fontSize: '0.76rem', fontWeight: 500 }}>One-click registration</span>
+            <span style={{ color: dark ? '#334155' : '#94a3b8', fontSize: '0.76rem', fontWeight: 500 }}>{t('auth.oneClickReg', 'One-click registration')}</span>
             <div style={{ flex: 1, height: 1, background: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)' }} />
           </div>
 
@@ -264,7 +270,7 @@ export default function RegisterPage() {
             fontSize: '0.82rem', color: dark ? '#a5b4fc' : '#4f46e5',
             lineHeight: 1.65, marginBottom: 28,
           }}>
-            🔒 We use Google OAuth for maximum security. Your data is safely stored and never shared with third parties.
+            🔒 {t('auth.regSecurityNote', 'We use Google OAuth for maximum security. Your data is safely stored.')}
           </div>
 
           {/* What you can do */}
@@ -275,15 +281,15 @@ export default function RegisterPage() {
             fontSize: '0.82rem', color: dark ? '#6ee7b7' : '#047857',
             lineHeight: 1.7, marginBottom: 32,
           }}>
-            ✅ After registering you'll be able to:<br />
-            &nbsp;&nbsp;• Raise geo-tagged complaints<br />
-            &nbsp;&nbsp;• Track status in real-time<br />
-            &nbsp;&nbsp;• Receive resolution notifications
+            {t('auth.afterRegHint', '✅ After registering you\'ll be able to:')}<br />
+            &nbsp;&nbsp;• {t('auth.regStep1', 'Raise geo-tagged complaints')}<br />
+            &nbsp;&nbsp;• {t('auth.regStep2', 'Track status in real-time')}<br />
+            &nbsp;&nbsp;• {t('auth.regStep3', 'Receive resolution notifications')}
           </div>
 
           <p style={{ textAlign: 'center', fontSize: '0.84rem', color: dark ? '#475569' : '#94a3b8' }}>
-            Already have an account?{' '}
-            <Link to="/login" style={{ color: '#818cf8', fontWeight: 700 }}>Sign in here</Link>
+            {t('auth.hasAccount', 'Already have an account? Sign in')}{' '}
+            <Link to="/login" style={{ color: '#818cf8', fontWeight: 700 }}>{t('auth.here', 'here')}</Link>
           </p>
         </div>
       </motion.div>

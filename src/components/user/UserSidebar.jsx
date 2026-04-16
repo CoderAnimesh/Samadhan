@@ -9,18 +9,20 @@ import { getAvatarUrl } from '../../utils/avatar';
 import { signOut, auth } from '../../firebase';
 import api from '../../api';
 import toast from 'react-hot-toast';
-
-const navItems = [
-  { id: 'overview', icon: LayoutDashboard, label: 'Overview' },
-  { id: 'raise', icon: MapPin, label: 'Raise Complaint' },
-  { id: 'complaints', icon: FileText, label: 'My Complaints' },
-  { id: 'notifications', icon: Bell, label: 'Notifications' },
-  { id: 'profile', icon: User, label: 'Profile' },
-];
+import { useTranslation } from 'react-i18next';
 
 export default function UserSidebar({ activeTab, setActiveTab, unreadCount = 0, mobileOpen, setMobileOpen }) {
+  const { t } = useTranslation();
   const { currentUser, dbUser } = useAuth();
   const navigate = useNavigate();
+
+  const navItems = [
+    { id: 'overview', icon: LayoutDashboard, label: t('admin.overview', 'Overview') },
+    { id: 'raise', icon: MapPin, label: t('dashboard.raise', 'Raise Complaint') },
+    { id: 'complaints', icon: FileText, label: t('dashboard.myComplaints', 'My Complaints') },
+    { id: 'notifications', icon: Bell, label: t('nav.notifications', 'Notifications') },
+    { id: 'profile', icon: User, label: t('nav.profile', 'Profile') },
+  ];
 
   const handleLogout = async () => {
     try {
@@ -110,7 +112,7 @@ export default function UserSidebar({ activeTab, setActiveTab, unreadCount = 0, 
             fontWeight: 500, fontSize: '0.88rem', transition: 'all 0.2s',
           }}
         >
-          <LogOut size={17} /> Logout
+          <LogOut size={17} /> {t('nav.logout', 'Logout')}
         </motion.button>
       </div>
     </>

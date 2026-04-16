@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Clock, CheckCircle, AlertCircle, MapPin, TrendingUp } from 'lucide-react';
+import { FileText, Clock, TrendingUp, CheckCircle, MapPin, AlertCircle } from 'lucide-react';
 import api from '../../api';
+import { useTranslation } from 'react-i18next';
 
 export default function UserOverview({ onNavigate }) {
+  const { t } = useTranslation();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,19 +24,19 @@ export default function UserOverview({ onNavigate }) {
   };
 
   const stats = [
-    { label: 'Total Complaints', value: counts.total, icon: FileText, color: '#6366f1', bg: 'blue' },
-    { label: 'Pending', value: counts.pending, icon: Clock, color: '#f59e0b', bg: 'amber' },
-    { label: 'In Progress', value: counts.assigned + counts.reverification, icon: TrendingUp, color: '#818cf8', bg: 'blue' },
-    { label: 'Resolved', value: counts.resolved, icon: CheckCircle, color: '#10b981', bg: 'green' },
+    { label: t('dashboard.total', 'Total Complaints'), value: counts.total, icon: FileText, color: '#6366f1', bg: 'blue' },
+    { label: t('dashboard.pending', 'Pending'), value: counts.pending, icon: Clock, color: '#f59e0b', bg: 'amber' },
+    { label: t('dashboard.inProgress', 'In Progress'), value: counts.assigned + counts.reverification, icon: TrendingUp, color: '#818cf8', bg: 'blue' },
+    { label: t('dashboard.resolved', 'Resolved'), value: counts.resolved, icon: CheckCircle, color: '#10b981', bg: 'green' },
   ];
 
   const recent = complaints.slice(0, 4);
 
   const statusInfo = {
-    pending: { label: 'Pending', color: '#f59e0b' },
-    assigned: { label: 'Assigned', color: '#6366f1' },
-    reverification: { label: 'Reverification', color: '#f97316' },
-    resolved: { label: 'Resolved', color: '#10b981' },
+    pending: { label: t('dashboard.pending', 'Pending'), color: '#f59e0b' },
+    assigned: { label: t('dashboard.assigned', 'Assigned'), color: '#6366f1' },
+    reverification: { label: t('dashboard.reverification', 'Reverification'), color: '#f97316' },
+    resolved: { label: t('dashboard.resolved', 'Resolved'), color: '#10b981' },
   };
 
   if (loading) return (
@@ -82,8 +84,8 @@ export default function UserOverview({ onNavigate }) {
             <MapPin size={22} color="white" />
           </div>
           <div>
-            <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.05rem' }}>Raise a New Complaint</div>
-            <div style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 3 }}>Report an issue in your area with live location</div>
+            <div style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.05rem' }}>{t('dashboard.raiseAction', 'Raise a New Complaint')}</div>
+            <div style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 3 }}>{t('dashboard.raiseDesc', 'Report an issue in your area with live location')}</div>
           </div>
         </div>
         <div style={{ color: '#818cf8', fontSize: '1.5rem' }}>→</div>
@@ -93,9 +95,9 @@ export default function UserOverview({ onNavigate }) {
       {recent.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <h3 className="section-title">Recent Complaints</h3>
+            <h3 className="section-title">{t('dashboard.recent', 'Recent Complaints')}</h3>
             <button onClick={() => onNavigate('complaints')} style={{ color: '#818cf8', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.83rem', fontWeight: 600 }}>
-              View All →
+              {t('nav.viewAll', 'View All')} →
             </button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -105,9 +107,9 @@ export default function UserOverview({ onNavigate }) {
                 <motion.div key={c.id} whileHover={{ x: 4 }} className="complaint-card" onClick={() => onNavigate('complaints')}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{c.category}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{t(`complaint.cats.${c.category}`, c.category)}</div>
                       <div style={{ color: '#94a3b8', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <MapPin size={12} /> {c.area || c.address?.slice(0, 50) || 'Location not available'}
+                        <MapPin size={12} /> {c.area || c.address?.slice(0, 50) || t('complaint.noLoc', 'Location not available')}
                       </div>
                     </div>
                     <span style={{ background: `${st.color}20`, color: st.color, border: `1px solid ${st.color}40`, padding: '3px 10px', borderRadius: 999, fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -124,9 +126,9 @@ export default function UserOverview({ onNavigate }) {
       {counts.total === 0 && (
         <div className="empty-state">
           <AlertCircle size={56} />
-          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>No Complaints Yet</h3>
-          <p style={{ fontSize: '0.88rem' }}>Click "Raise Complaint" to report an issue in your area.</p>
-          <button className="btn btn-primary" onClick={() => onNavigate('raise')}>Raise First Complaint</button>
+          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>{t('dashboard.noMatch', 'No Complaints Yet')}</h3>
+          <p style={{ fontSize: '0.88rem' }}>{t('dashboard.noMatchSub', 'Click "Raise Complaint" to report an issue in your area.')}</p>
+          <button className="btn btn-primary" onClick={() => onNavigate('raise')}>{t('dashboard.raiseFirst', 'Raise First Complaint')}</button>
         </div>
       )}
     </div>

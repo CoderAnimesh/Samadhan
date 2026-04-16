@@ -1,18 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, CheckCircle, User, RotateCcw, ChevronDown, ChevronUp, AlertCircle } from 'lucide-react';
+import { MapPin, ChevronUp, ChevronDown, AlertCircle } from 'lucide-react';
 import api from '../../api';
-
-const PHASES = [
-  { key: 'pending', label: 'Submitted', icon: '📋', desc: 'Your complaint has been received.' },
-  { key: 'assigned', label: 'Worker Assigned', icon: '👷', desc: 'A worker has been assigned to resolve your issue.' },
-  { key: 'reverification', label: 'Re-verification', icon: '🔍', desc: 'Admin is verifying the resolution.' },
-  { key: 'resolved', label: 'Resolved', icon: '✅', desc: 'Your complaint has been resolved!' },
-];
-
-const phaseIndex = (status) => PHASES.findIndex(p => p.key === status);
+import { useTranslation } from 'react-i18next';
 
 function ComplaintStepper({ status }) {
+  const { t } = useTranslation();
+  const PHASES = [
+    { key: 'pending', label: t('dashboard.submitted', 'Submitted'), icon: '📋', desc: t('dashboard.submittedDesc', 'Your complaint has been received.') },
+    { key: 'assigned', label: t('dashboard.assigned', 'Worker Assigned'), icon: '👷', desc: t('dashboard.assignedDesc', 'A worker has been assigned to resolve your issue.') },
+    { key: 'reverification', label: t('dashboard.reverification', 'Re-verification'), icon: '🔍', desc: t('dashboard.reverificationDesc', 'Admin is verifying the resolution.') },
+    { key: 'resolved', label: t('dashboard.resolved', 'Resolved'), icon: '✅', desc: t('dashboard.resolvedDesc', 'Your complaint has been resolved!') },
+  ];
+  
+  const phaseIndex = (st) => PHASES.findIndex(p => p.key === st);
   const currentIdx = phaseIndex(status);
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 0, marginTop: 16, overflowX: 'auto', paddingBottom: 4 }}>
@@ -66,6 +67,13 @@ function ComplaintStepper({ status }) {
 }
 
 function ComplaintCard({ complaint }) {
+  const { t } = useTranslation();
+  const PHASES = [
+    { key: 'pending', label: t('dashboard.submitted', 'Submitted'), desc: t('dashboard.submittedDesc', 'Your complaint has been received.') },
+    { key: 'assigned', label: t('dashboard.assigned', 'Worker Assigned'), desc: t('dashboard.assignedDesc', 'A worker has been assigned to resolve your issue.') },
+    { key: 'reverification', label: t('dashboard.reverification', 'Re-verification'), desc: t('dashboard.reverificationDesc', 'Admin is verifying the resolution.') },
+    { key: 'resolved', label: t('dashboard.resolved', 'Resolved'), desc: t('dashboard.resolvedDesc', 'Your complaint has been resolved!') },
+  ];
   const [expanded, setExpanded] = useState(false);
   const currentPhase = PHASES.find(p => p.key === complaint.status);
   const statusColors = { pending: '#f59e0b', assigned: '#6366f1', reverification: '#f97316', resolved: '#10b981' };
@@ -81,14 +89,14 @@ function ComplaintCard({ complaint }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }} onClick={() => setExpanded(!expanded)}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{complaint.category}</span>
+            <span style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t(`complaint.cats.${complaint.category}`, complaint.category)}</span>
             <span style={{
               background: `${statusColors[complaint.status] || '#6366f1'}20`,
               color: statusColors[complaint.status] || '#6366f1',
               border: `1px solid ${statusColors[complaint.status] || '#6366f1'}40`,
               padding: '2px 10px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700,
             }}>
-              {complaint.status?.toUpperCase()}
+              {t(`dashboard.${complaint.status}`, complaint.status?.toUpperCase())}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#94a3b8', fontSize: '0.8rem' }}>
@@ -124,23 +132,23 @@ function ComplaintCard({ complaint }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, fontSize: '0.83rem' }}>
                 <div>
-                  <div style={{ color: '#64748b', marginBottom: 3 }}>Description</div>
+                  <div style={{ color: '#64748b', marginBottom: 3 }}>{t('complaint.description', 'Description')}</div>
                   <div style={{ color: '#e2e8f0' }}>{complaint.description}</div>
                 </div>
                 <div>
-                  <div style={{ color: '#64748b', marginBottom: 3 }}>Submitted On</div>
-                  <div style={{ color: '#e2e8f0' }}>{new Date(complaint.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                  <div style={{ color: '#64748b', marginBottom: 3 }}>{t('admin.table.date', 'Submitted On')}</div>
+                  <div style={{ color: '#e2e8f0' }}>{new Date(complaint.createdAt).toLocaleDateString(t('app.locale', 'en-IN'), { day: 'numeric', month: 'short', year: 'numeric' })}</div>
                 </div>
                 {complaint.workerName && (
                   <div>
-                    <div style={{ color: '#64748b', marginBottom: 3 }}>Assigned Worker</div>
+                    <div style={{ color: '#64748b', marginBottom: 3 }}>{t('admin.assign', 'Assigned Worker')}</div>
                     <div style={{ color: '#818cf8', fontWeight: 600 }}>👷 {complaint.workerName}</div>
                   </div>
                 )}
                 {complaint.resolvedAt && (
                   <div>
-                    <div style={{ color: '#64748b', marginBottom: 3 }}>Resolved On</div>
-                    <div style={{ color: '#10b981' }}>✅ {new Date(complaint.resolvedAt).toLocaleDateString('en-IN')}</div>
+                    <div style={{ color: '#64748b', marginBottom: 3 }}>{t('dashboard.resolvedOn', 'Resolved On')}</div>
+                    <div style={{ color: '#10b981' }}>✅ {new Date(complaint.resolvedAt).toLocaleDateString(t('app.locale', 'en-IN'))}</div>
                   </div>
                 )}
               </div>
@@ -176,8 +184,8 @@ export default function MyComplaints() {
     <div className="page-enter">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <div>
-          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem' }}>My Complaints</h2>
-          <p style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 2 }}>{complaints.length} total complaint{complaints.length !== 1 ? 's' : ''}</p>
+          <h2 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700, fontSize: '1.4rem' }}>{t('dashboard.myComplaints', 'My Complaints')}</h2>
+          <p style={{ color: '#94a3b8', fontSize: '0.83rem', marginTop: 2 }}>{complaints.length} {t('dashboard.total', 'total complaints')}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {['all', 'pending', 'assigned', 'reverification', 'resolved'].map(f => (
@@ -188,10 +196,10 @@ export default function MyComplaints() {
                 padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600,
                 background: filter === f ? 'var(--primary)' : 'var(--bg-card)',
                 color: filter === f ? 'white' : 'var(--text-secondary)',
-                textTransform: 'capitalize', transition: 'all 0.2s',
+                transition: 'all 0.2s',
               }}
             >
-              {f}
+              {t(`dashboard.${f}`, f)}
             </button>
           ))}
         </div>
@@ -200,9 +208,9 @@ export default function MyComplaints() {
       {filtered.length === 0 ? (
         <div className="empty-state">
           <AlertCircle size={48} />
-          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>No {filter !== 'all' ? filter : ''} Complaints</h3>
+          <h3 style={{ fontFamily: 'Outfit,sans-serif', fontWeight: 700 }}>{t('dashboard.noMatch', 'No matching complaints')}</h3>
           <p style={{ fontSize: '0.85rem' }}>
-            {filter === 'all' ? 'You haven\'t raised any complaints yet.' : `No complaints with "${filter}" status.`}
+            {t('dashboard.noComplaints', 'You haven\'t raised any complaints yet.')}
           </p>
         </div>
       ) : (
