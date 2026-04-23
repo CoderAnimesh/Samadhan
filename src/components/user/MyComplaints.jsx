@@ -161,6 +161,7 @@ function ComplaintCard({ complaint }) {
 }
 
 export default function MyComplaints() {
+  const { t } = useTranslation();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
