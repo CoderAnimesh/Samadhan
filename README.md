@@ -1,6 +1,6 @@
 <div align="center">
 
-  # ⚡ RAM — Next-Gen Civic Issue & Grievance Portal
+  # ⚡ SamaDhan — Next-Gen Civic Issue & Grievance Portal
 
   <p align="center">
     <b>Empowering Communities • Streamlining Resolutions • Transforming Civic Governance</b>
